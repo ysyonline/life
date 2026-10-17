@@ -4,6 +4,7 @@
 // 但独立存放更保险，也让「重开新局」时 reset 语义清晰）。
 // 设计原则：只读观察者 —— 只读 state，绝不写 state；不改动任何模拟行为。
 import { BUILDINGS } from '../config/buildings.js';
+import { RULES } from '../config/rules.js';
 import {
   housingCapacity as housingCapacityOf,
   laborDemand as laborDemandOf,
@@ -11,8 +12,14 @@ import {
   commerceIncome as commerceIncomeOf,
 } from './simulation.js';
 
-// 里程碑阈值（与 rules.unlockThresholds 同源，但固定语义：Lv2=20 / Lv3=50 / Lv4=100）
-const MILESTONE_THRESHOLDS = { lv2: 20, lv3: 50, lv4: 100 };
+// 里程碑阈值：从 RULES.unlockThresholds 派生（单一真源）。
+// 调阈值时遥测口径自动跟随，杜绝「同源不同步」——此前硬编码 {20,50,100}，
+// 若阈值改动而此处不跟，M2/M3 打点会静默错位（见 docs/tech/02-p1-implementation-impact.md §6）。
+const MILESTONE_THRESHOLDS = {
+  lv2: RULES.unlockThresholds[1],
+  lv3: RULES.unlockThresholds[2],
+  lv4: RULES.unlockThresholds[3],
+};
 // 采样间隔（tick）：与自动存档同节奏，30 tick 一条快照
 const SAMPLE_INTERVAL = 30;
 
