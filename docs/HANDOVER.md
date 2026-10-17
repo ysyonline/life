@@ -198,7 +198,8 @@ node scratch/factory-town-replay2.mjs                         # 工厂镇独立�
 - **`cdba654`（2026-10-17 21:46）**「test+docs: D10 配置快照 + 节奏探针留档 + N2 立项建议与交接总账」——D10 快照测试（18 用例）、探针留档（sim11/12、工厂镇档案与复放）、04 N2 立项建议 v1.1、HANDOVER 基线升版与 P0 记录。8 文件 / +1157 行。
 - **有意未纳入版本库**：`.playwright-cli/`、`.smoke/`、`.workbuddy/`（本地工具产物，保持 untracked）；`scratch/factory-town-replay.mjs`（过程调试件，未提交，可删）；`node_modules/`、`dist/` 由 `.gitignore` 排除。**建议后续把前三个也写进 `.gitignore`**，本轮未改动 `.gitignore`，待用户定。
 - **`3e50ad6`（2026-10-18 05:41）**「feat: P-1′ 实施批次（O6′ 参数 + D-N2-4 遥测补采 + 协议 v1.3）」——O6′ config（封顶 26 + 阈值 20/60/145）+ 封顶公式 + 7 条开发自测派生式重写 + D10 快照（19 用例）+ R-bot3 看门狗重钉（12/401/null、V1 null）+ D-N2-4 逐帧稀缺标记 + HANDOVER §5 升版 + 02 §3.1 补记 + 协议 v1.3。11 文件 / +338 −89 行。
-- **工作区含本轮（N2 首期弧）未提交改动**：修改 `docs/design/01-game-design.md`（阈值/可达性核算表同步 O6′ + §5.4 动分值硬约束）、`docs/design/03-pacing-postmortem-round2.md`（升 v1.5）；新增 `docs/design/05-n2-sprint1-experiment.md`、`docs/quality/n2-experiment-gate.md`（724 行）、`scratch/n2-sprint1-probe.mjs` + 6 份探针输出留档。**`src/`、`tests/` 零改动**（双方纪律核验）。待用户拍板 D-N2-7/8 后一并提交。**原设计侧待办（03 升 v1.5、01 阈值表同步）已在本轮完成。**
+- **`dddb7d6`（2026-10-18 07:05）**「docs: N2 首期实验弧归档」——05 实验设计案 v1.0 + N2 验收判据 v1.0（724 行）+ 探针与 6 份留档 + 01 阈值表同步 O6′ + 03 升 v1.5 + HANDOVER 拍板记录（D-N2-7/8 暂缓、D-N2-11 口径确认）。12 文件 / +1969 −15 行。**`src/`、`tests/` 零改动。**
+- **工作区终态**：仅余有意 untracked——`.playwright-cli/`、`.smoke/`、`.workbuddy/`（本地工具产物）、`scratch/factory-town-replay.mjs`（过程调试件，可删待用户定）。**建议后续把前三个写进 `.gitignore`**，待用户定。
 
 ## 7. 纪律备忘（给下一位接手者）
 
