@@ -17,9 +17,11 @@ export function createInitialState() {
     population: { count: 0, starveTicks: 0 },
     prosperity: 0,
     level: 1,
+    maxLevel: 1, // 历史最高等级（P3 解锁粘性，只升不降）；建造解锁判定以此为准
     grid: createGrid(RULES.mapSize), // Map<"x,y", { terrain, buildingId }>
     buildings: [], // { id, type, anchorX, anchorY, idle, idleReason }
     nextBuildingId: 1,
-    ui: { placingType: null, hoverCell: null, selectedBuildingId: null, toast: null },
+    // highlightType：UX-2 建造菜单高亮目标（Lv4 达成后置为 'grocer'，玩家选中后清除）；瞬态不入存档
+    ui: { placingType: null, hoverCell: null, selectedBuildingId: null, toast: null, highlightType: null },
   };
 }

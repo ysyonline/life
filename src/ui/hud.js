@@ -21,7 +21,7 @@ export function moneyLabel(state) {
   return `铜钱 ${formatMoney(state.money)}（市税 +${taxIncome(state).toFixed(2)} 商业 +${formatMoney(commerceIncome(state))}）`;
 }
 
-export function createHud(root, { onSpeed, onSave }) {
+export function createHud(root, { onSpeed, onSave, onRestart, onTelemetry }) {
   const el = document.createElement('div');
   el.id = 'hud';
   el.innerHTML = `
@@ -33,13 +33,18 @@ export function createHud(root, { onSpeed, onSave }) {
     <span class="res" data-r="pop"></span>
     <div class="prosperity">
       <span data-r="level"></span>
-      <div class="bar"><div data-r="bar"></div></div>
+      <div class="barcol">
+        <div class="bar"><div data-r="bar"></div></div>
+        <div class="hint">断链/闲置建筑不计繁荣度</div>
+      </div>
       <span data-r="next"></span>
     </div>
     <button data-speed="0">暂停</button>
     <button data-speed="1" class="active">1×</button>
     <button data-speed="2">2×</button>
     <button data-act="save">保存</button>
+    <button data-act="restart" class="danger">重开新局</button>
+    <button data-act="telemetry">试玩数据</button>
   `;
   root.appendChild(el);
 
@@ -51,6 +56,8 @@ export function createHud(root, { onSpeed, onSave }) {
     });
   });
   el.querySelector('[data-act="save"]').addEventListener('click', onSave);
+  el.querySelector('[data-act="restart"]').addEventListener('click', onRestart);
+  el.querySelector('[data-act="telemetry"]').addEventListener('click', onTelemetry);
 
   let prevFood = null;
 

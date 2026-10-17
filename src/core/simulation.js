@@ -94,7 +94,7 @@ function settleProduction(state) {
 // 市税：每户每 tick 的保底收入。
 // 计税基数 = 在城户数（state.population.count），不是民居空置容量：空置民居不计税，
 // 否则「建空茅舍 = 印钞机」，经济被压平。
-// 不受运转系数（正常 1.0 / 缺料缺人 0.3）影响：建筑停产也照常按户收税，
+// 不受运转系数（正常 1.0 / 闲置 0）影响：建筑停产也照常按户收税，
 // 这条收入是「铜钱耗尽」不可恢复态的唯一逃生通道。
 export function taxIncome(state) {
   return state.population.count * RULES.tax.perHouseholdPerTick;
@@ -147,13 +147,27 @@ function settlePopulation(state) {
   }
 }
 
-// 步骤 4：繁荣度 = Σ 建筑基础分 × 运转系数（正常 1.0，缺料/缺人 0.3）
+// 步骤 4：繁荣度（单一公式，透明可算；02-pacing-tuning.md P1/P2）
+//   繁荣度 = Σ[非民居建筑：基础分 × 运转系数（正常 1.0 / 闲置 0）]
+//          + Σ[民居基础分] × min(1, 在城户数 / 民居总容量)   // 容量为 0 时入住率按 0
+// 设计意图：繁荣度只奖励「活着的城市」——断链/闲置建筑不计分（P1）、空屋按入住率折算（P2），
+// 堵死「用铜钱直接购买繁荣度」的两个刷分口。农田/林场本就不会闲置、粮仓为被动建筑，维持恒计分。
 export function computeProsperity(state) {
   const c = RULES.prosperityCoef;
-  return state.buildings.reduce(
-    (sum, b) => sum + BUILDINGS[b.type].score * (b.idle ? c.idle : c.active),
-    0
-  );
+  let working = 0; // 非民居（生产/存储/原料）：运转才计分
+  let housingScore = 0; // 民居（茅舍/瓦屋）基础分合计
+  let housingCap = 0;
+  for (const b of state.buildings) {
+    const def = BUILDINGS[b.type];
+    if (def.capacity > 0) {
+      housingScore += def.score;
+      housingCap += def.capacity;
+    } else {
+      working += def.score * (b.idle ? c.idle : c.active);
+    }
+  }
+  const occupancy = housingCap > 0 ? Math.min(1, state.population.count / housingCap) : 0;
+  return working + housingScore * occupancy;
 }
 
 export function computeLevel(prosperity) {
@@ -164,6 +178,13 @@ export function computeLevel(prosperity) {
   return level;
 }
 
+// 解锁判定等级（P3 解锁粘性）：瞬时等级与历史最高等级（maxLevel，只升不降）取大者。
+// core 放置校验与 UI 建造菜单统一以此为准（core 是规则唯一权威）；
+// 繁荣度进度条/HUD 仍显示瞬时 state.level。
+export function unlockedLevel(state) {
+  return Math.max(state.level, state.maxLevel ?? state.level);
+}
+
 // 推进一个 tick。tick 计数先自增，所有周期判断基于自增后的值。
 export function tick(state) {
   state.tick += 1;
@@ -172,4 +193,7 @@ export function tick(state) {
   settlePopulation(state);
   state.prosperity = computeProsperity(state);
   state.level = computeLevel(state.prosperity);
+  // 解锁粘性（P3）：maxLevel 只升不降。断链/人口流失导致的繁荣度回落只影响
+  // 进度条数值，不回收已解锁内容——杜绝「刚解锁又锁回去」的体验回退。
+  state.maxLevel = Math.max(state.maxLevel ?? state.level, state.level);
 }

@@ -8,8 +8,9 @@ export const RULES = {
   initialResources: { grain: 20, wood: 60, food: 20, goods: 0 },
   initialMoney: 240,
 
-  // 繁荣度
-  prosperityCoef: { active: 1.0, idle: 0.3 },
+  // 繁荣度（P1：02-pacing-tuning.md）
+  // idle=0：断链/闲置建筑不计繁荣度——堵死「铺闲置建筑刷分」口，繁荣度只奖励活着的城市
+  prosperityCoef: { active: 1.0, idle: 0 },
   unlockThresholds: [0, 20, 50, 100], // Lv1~Lv4
 
   // 人口
@@ -27,7 +28,7 @@ export const RULES = {
     perHouseholdPerTick: 0.05, // 每户每 tick
     sourceBuildings: ['hut', 'house'], // 民居类
     countBasis: 'population', // 计税基数 = 在城户数
-    affectedByRuntimeFactor: false, // 不受缺料/缺人运转系数（1.0/0.3）影响
+    affectedByRuntimeFactor: false, // 不受缺料/缺人运转系数（正常 1.0 / 闲置 0）影响
   },
 
   // 铜钱精度：内部浮点累计，显示时向下取整（避免「显示有钱却买不起」）

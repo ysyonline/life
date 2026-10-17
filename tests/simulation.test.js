@@ -1,8 +1,8 @@
-// 生产链结算、人口迁入/迁出、繁荣度（含断链降权 0.3）
+// 生产链结算、人口迁入/迁出、繁荣度（P1/P2：断链/闲置不计分，民居按入住率折算；P3：解锁粘性）
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInitialState } from '../src/core/state.js';
 import { tick, computeProsperity, computeLevel, computeCaps } from '../src/core/simulation.js';
-import { placeBuilding } from '../src/core/grid.js';
+import { placeBuilding, canPlace } from '../src/core/grid.js';
 import { RULES } from '../src/config/rules.js';
 import { BUILDINGS } from '../src/config/buildings.js';
 import { findSpot } from './helpers.js';
@@ -206,7 +206,7 @@ describe('繁荣度与解锁', () => {
     expect(computeProsperity(state)).toBe(4);
   });
 
-  it('断链建筑按 0.3 降权计入', () => {
+  it('断链建筑不计繁荣度（闲置=0）', () => {
     const spot = findSpot(state, null, 2, 2);
     const mill = placeBuilding(state, 'mill', spot.x, spot.y).building;
     state.population.count = 4;
@@ -220,8 +220,8 @@ describe('繁荣度与解锁', () => {
     expect(computeProsperity(state)).toBeCloseTo(4 * RULES.prosperityCoef.idle, 5);
   });
 
-  it('缺人与缺料同样降权，正常建筑仍全额', () => {
-    // 磨坊（工坊 4 分）需 1 劳力，用两座验证缺人降权；农田已免劳力不适用此场景
+  it('缺人与缺料同样不计分，正常建筑仍全额', () => {
+    // 磨坊（工坊 4 分）需 1 劳力，用两座验证缺人不计分；农田已免劳力不适用此场景
     const millSpotA = findSpot(state, null, 2, 2);
     placeBuilding(state, 'mill', millSpotA.x, millSpotA.y);
     const millSpotB = findSpot(state, null, 2, 2);
@@ -229,7 +229,7 @@ describe('繁荣度与解锁', () => {
     state.population.count = 0; // 全部缺人
 
     tick(state);
-    // 两座磨坊各 4×0.3
+    // 两座磨坊各 4×0 = 0
     expect(computeProsperity(state)).toBeCloseTo(8 * RULES.prosperityCoef.idle, 5);
 
     state.population.count = 4;
@@ -238,9 +238,29 @@ describe('繁荣度与解锁', () => {
     expect(computeProsperity(state)).toBe(8); // 全部正常运转
   });
 
-  it('民居为被动建筑，恒按全额计入', () => {
+  it('民居按入住率计分：0 户计 0，住满计全额，部分入住按比例', () => {
     const spot = findSpot(state, null, 1, 1);
-    placeBuilding(state, 'hut', spot.x, spot.y);
+    placeBuilding(state, 'hut', spot.x, spot.y); // 容量 2，基础分 1
+    state.resources.food = 0; // 冻结迁入/迁出（3 tick 内不会触发迁出宽限），隔离人口变量
+
+    state.population.count = 0; // 空屋不计分
+    tick(state);
+    expect(computeProsperity(state)).toBe(0);
+
+    state.population.count = 2; // 住满 → 全额
+    tick(state);
+    expect(computeProsperity(state)).toBe(1);
+
+    state.population.count = 1; // 入住率 1/2 → 按比例
+    tick(state);
+    expect(computeProsperity(state)).toBeCloseTo(0.5, 10);
+  });
+
+  it('入住率超过 100% 时按 1 截断（户数多于容量不多给分）', () => {
+    const spot = findSpot(state, null, 1, 1);
+    placeBuilding(state, 'hut', spot.x, spot.y); // 容量 2，基础分 1
+    state.population.count = 5; // min(1, 5/2) = 1
+    state.resources.food = 0;
     tick(state);
     expect(computeProsperity(state)).toBe(1);
   });
@@ -257,15 +277,57 @@ describe('繁荣度与解锁', () => {
   });
 
   it('tick 后 state.level 随繁荣度更新', () => {
-    // 堆 20 座茅舍即达 Lv2 阈值（每座 1 分）
+    // 20 座「住满」的茅舍 = 20 分达 Lv2 阈值（P2：民居按入住率计分，空屋计 0）
     state.money = 100000;
     state.resources.wood = 100000;
     for (let i = 0; i < 20; i++) {
       const s = findSpot(state, null, 1, 1);
       placeBuilding(state, 'hut', s.x, s.y);
     }
+    state.population.count = 40; // 住满（总容量 20×2）
     tick(state);
     expect(state.prosperity).toBe(20);
     expect(state.level).toBe(2);
+  });
+});
+
+describe('解锁粘性（P3：maxLevel 只升不降）', () => {
+  it('升到 Lv3 后繁荣度回落，建造判定仍按 maxLevel 解锁（不再重锁）', () => {
+    state.money = 100000;
+    state.resources.wood = 100000;
+    // 50 座住满茅舍 = 50 分 → Lv3
+    for (let i = 0; i < 50; i++) {
+      const s = findSpot(state, null, 1, 1);
+      placeBuilding(state, 'hut', s.x, s.y);
+    }
+    state.population.count = 100; // 住满（总容量 50×2）
+    tick(state);
+    expect(state.level).toBe(3);
+    expect(state.maxLevel).toBe(3);
+
+    // 繁荣度回落：户数跌到 10 → 民居得分 50 × 0.1 = 5 → 瞬时等级跌回 Lv1
+    state.population.count = 10;
+    tick(state);
+    expect(state.level).toBe(1);
+    expect(state.maxLevel).toBe(3); // 只升不降
+
+    // core 放置校验（规则唯一权威）仍放行 Lv3 建筑
+    const s = findSpot(state, null, 1, 1);
+    expect(canPlace(state, 'carpenter', s.x, s.y).ok).toBe(true);
+    expect(placeBuilding(state, 'carpenter', s.x, s.y).ok).toBe(true);
+  });
+
+  it('maxLevel 不随瞬时等级回落，也不低于当前等级', () => {
+    expect(state.maxLevel).toBe(1);
+    state.population.count = 0; // 无任何建筑，繁荣度恒 0
+    runTicks(10);
+    expect(state.level).toBe(1);
+    expect(state.maxLevel).toBe(1);
+
+    // 瞬时等级被人为抬高（等价于繁荣度冲高），maxLevel 跟上
+    state.prosperity = 100;
+    state.level = computeLevel(state.prosperity);
+    tick(state); // tick 内重算 level，但 maxLevel 已记录
+    expect(state.maxLevel).toBeGreaterThanOrEqual(state.level);
   });
 });

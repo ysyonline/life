@@ -3,6 +3,7 @@
 import { BUILDINGS } from '../config/buildings.js';
 import { RESOURCES } from '../config/resources.js';
 import { RULES } from '../config/rules.js';
+import { housingCapacity } from '../core/simulation.js';
 
 const STATUS = {
   material: { text: '缺料·停产', cls: 'warn-material' },
@@ -45,6 +46,15 @@ export function createInfoPanel(root, { onDemolish, onClose }) {
     const refundMoney = Math.floor(def.cost.money * RULES.demolishRefundRate);
     const refundWood = Math.floor(def.cost.wood * RULES.demolishRefundRate);
     const extra = def.capacity > 0 ? `｜容纳 ${def.capacity} 户` : '';
+    // UX-1：民居显示全城入住率（户数/总容量），与繁荣度公式同源，解释民居计分规则
+    const occupancyLine =
+      def.capacity > 0
+        ? (() => {
+            const cap = housingCapacity(state);
+            const pct = cap > 0 ? Math.min(100, Math.round((state.population.count / cap) * 100)) : 0;
+            return `<div>入住率 ${state.population.count}/${cap}（${pct}%）——民居按入住率计繁荣度</div>`;
+          })()
+        : '';
     const terrainTip = def.terrain
       ? `｜地形 ${def.terrain === 'fertile' ? '沃土' : '林地'}`
       : '';
@@ -55,6 +65,7 @@ export function createInfoPanel(root, { onDemolish, onClose }) {
       <div>状态 <span class="${st.cls}">${st.text}</span></div>
       <div>${io.length ? io.join('｜') : '无投入产出（被动建筑）'}</div>
       <div>劳力 ${def.workers}${extra}</div>
+      ${occupancyLine}
       <div>坐标 (${b.anchorX}, ${b.anchorY})</div>
       <button data-act="demolish" data-id="${b.id}" class="danger">拆除（返还 钱${refundMoney} 木${refundWood}）</button>
       <button data-act="close">关闭</button>

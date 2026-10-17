@@ -12,6 +12,7 @@ export function serialize(state) {
     population: { ...state.population },
     prosperity: state.prosperity,
     level: state.level,
+    maxLevel: state.maxLevel,
     nextBuildingId: state.nextBuildingId,
     buildings: state.buildings.map((b) => ({ ...b })),
     grid: [...state.grid.entries()].map(([k, cell]) => [k, { ...cell }]),
@@ -27,6 +28,9 @@ export function deserialize(data, freshState) {
   state.population = { ...data.population };
   state.prosperity = data.prosperity;
   state.level = data.level;
+  // 存档兼容（P3）：旧存档无 maxLevel 字段时以当前等级兜底初始化——旧规则下
+  // 解锁本来就跟瞬时等级走，用 data.level 兜底语义等价，无需提升 saveVersion
+  state.maxLevel = data.maxLevel ?? data.level ?? 1;
   state.nextBuildingId = data.nextBuildingId;
   state.buildings = data.buildings.map((b) => ({ ...b }));
   state.grid = new Map(data.grid.map(([k, cell]) => [k, { ...cell }]));

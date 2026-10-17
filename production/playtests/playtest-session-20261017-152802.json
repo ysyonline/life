@@ -1,0 +1,197 @@
+{
+  "protocol": "playtest-protocol@1.1",
+  "gameBuild": "3338e97",
+  "exportedAt": "2026-10-17T07:28:02.727Z",
+  "playerProfile": null,
+  "paceVerdict": null,
+  "notes": "",
+  "milestones": {
+    "lv2": 45,
+    "lv3": 145,
+    "lv4": 225
+  },
+  "chainBreaks": [],
+  "samples": [
+    {
+      "tick": 30,
+      "money": 152.00000000000003,
+      "wood": 45,
+      "grain": 100,
+      "food": 15.999999999999996,
+      "goods": 0,
+      "households": 4,
+      "housingCapacity": 6,
+      "laborDemand": 0,
+      "prosperity": 10,
+      "level": 1,
+      "buildingCount": 7,
+      "buildingBreakdown": {
+        "hut": 3,
+        "farm": 2,
+        "forest": 2
+      }
+    },
+    {
+      "tick": 60,
+      "money": 68.24999999999991,
+      "wood": 30,
+      "grain": 96,
+      "food": 25.49999999999997,
+      "goods": 0,
+      "households": 6,
+      "housingCapacity": 6,
+      "laborDemand": 3,
+      "prosperity": 26,
+      "level": 2,
+      "buildingCount": 11,
+      "buildingBreakdown": {
+        "hut": 3,
+        "farm": 3,
+        "forest": 2,
+        "mill": 2,
+        "eatery": 1
+      }
+    },
+    {
+      "tick": 90,
+      "money": 122.49999999999983,
+      "wood": 85,
+      "grain": 96,
+      "food": 36.99999999999992,
+      "goods": 0,
+      "households": 8,
+      "housingCapacity": 12,
+      "laborDemand": 3,
+      "prosperity": 29,
+      "level": 2,
+      "buildingCount": 15,
+      "buildingBreakdown": {
+        "hut": 6,
+        "farm": 3,
+        "forest": 3,
+        "mill": 2,
+        "eatery": 1
+      }
+    },
+    {
+      "tick": 120,
+      "money": 118.9999999999998,
+      "wood": 70,
+      "grain": 132,
+      "food": 28.99999999999992,
+      "goods": 0,
+      "households": 12,
+      "housingCapacity": 12,
+      "laborDemand": 5,
+      "prosperity": 44,
+      "level": 2,
+      "buildingCount": 19,
+      "buildingBreakdown": {
+        "hut": 6,
+        "farm": 3,
+        "forest": 3,
+        "mill": 3,
+        "eatery": 2,
+        "granary": 2
+      }
+    },
+    {
+      "tick": 150,
+      "money": 246.99999999999963,
+      "wood": 110,
+      "grain": 166,
+      "food": 22.99999999999994,
+      "goods": 0,
+      "households": 12,
+      "housingCapacity": 12,
+      "laborDemand": 5,
+      "prosperity": 50,
+      "level": 3,
+      "buildingCount": 22,
+      "buildingBreakdown": {
+        "hut": 6,
+        "farm": 5,
+        "forest": 3,
+        "mill": 3,
+        "eatery": 2,
+        "granary": 3
+      }
+    },
+    {
+      "tick": 180,
+      "money": 235.7499999999998,
+      "wood": 29,
+      "grain": 232,
+      "food": 42.499999999999964,
+      "goods": 28,
+      "households": 15,
+      "housingCapacity": 24,
+      "laborDemand": 9,
+      "prosperity": 65.375,
+      "level": 3,
+      "buildingCount": 28,
+      "buildingBreakdown": {
+        "hut": 6,
+        "farm": 5,
+        "forest": 3,
+        "mill": 5,
+        "eatery": 2,
+        "granary": 3,
+        "carpenter": 1,
+        "house": 3
+      }
+    },
+    {
+      "tick": 210,
+      "money": 392.9999999999997,
+      "wood": 41,
+      "grain": 224,
+      "food": 41.999999999999964,
+      "goods": 58,
+      "households": 21,
+      "housingCapacity": 24,
+      "laborDemand": 12,
+      "prosperity": 89.125,
+      "level": 3,
+      "buildingCount": 34,
+      "buildingBreakdown": {
+        "hut": 6,
+        "farm": 5,
+        "forest": 6,
+        "mill": 6,
+        "eatery": 4,
+        "granary": 3,
+        "carpenter": 1,
+        "house": 3
+      }
+    }
+  ],
+  "finalSnapshot": {
+    "tick": 225,
+    "money": 515.4999999999998,
+    "wood": 56,
+    "grain": 170,
+    "food": 48.99999999999996,
+    "goods": 73,
+    "households": 24,
+    "housingCapacity": 24,
+    "laborDemand": 14,
+    "prosperity": 100,
+    "level": 4,
+    "buildingCount": 36,
+    "buildingBreakdown": {
+      "hut": 6,
+      "farm": 5,
+      "forest": 6,
+      "mill": 7,
+      "eatery": 5,
+      "granary": 3,
+      "carpenter": 1,
+      "house": 3
+    },
+    "taxIncome": 1.2000000000000002,
+    "commerceIncome": 15
+  },
+  "speedChanges": [],
+  "usedFastForward": false
+}

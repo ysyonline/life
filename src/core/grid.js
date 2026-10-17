@@ -1,6 +1,7 @@
 // 网格系统：地块数据、地形生成、放置校验、建造/拆除
 import { BUILDINGS } from '../config/buildings.js';
 import { RULES } from '../config/rules.js';
+import { unlockedLevel } from './simulation.js';
 
 export const TERRAIN = { PLAIN: 'plain', FERTILE: 'fertile', WOODLAND: 'woodland' };
 
@@ -55,11 +56,12 @@ export function getCell(state, x, y) {
 }
 
 // 放置校验：解锁等级、边界、占用、地形。返回 { ok, reason }
-// 解锁等级是唯一权威判定（UI 层的置灰只是提示），绕过 UI 的调用同样受此约束
+// 解锁等级是唯一权威判定（UI 层的置灰只是提示），绕过 UI 的调用同样受此约束。
+// P3 解锁粘性：按 maxLevel（历史最高，只升不降）判定，繁荣度瞬时回落不重锁。
 export function canPlace(state, type, x, y) {
   const def = BUILDINGS[type];
   if (!def) return { ok: false, reason: '未知建筑' };
-  if (def.unlockLevel > state.level)
+  if (def.unlockLevel > unlockedLevel(state))
     return { ok: false, reason: 'locked', needLevel: def.unlockLevel };
   const [w, h] = def.size;
   const size = RULES.mapSize;

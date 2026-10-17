@@ -62,6 +62,19 @@ describe('序列化 / 反序列化', () => {
     const loaded = deserialize(serialize(state), createInitialState);
     expect(loaded.ui.selectedBuildingId).toBeNull();
   });
+
+  it('maxLevel 随存档往返；旧存档（无该字段）以当前等级兜底（P3 存档兼容）', () => {
+    state.maxLevel = 3;
+    const loaded = deserialize(serialize(state), createInitialState);
+    expect(loaded.maxLevel).toBe(3);
+
+    // 模拟 P3 之前的旧存档：无 maxLevel 字段
+    const data = serialize(state);
+    delete data.maxLevel;
+    data.level = 2;
+    const legacy = deserialize(data, createInitialState);
+    expect(legacy.maxLevel).toBe(2);
+  });
 });
 
 describe('localStorage 读写', () => {

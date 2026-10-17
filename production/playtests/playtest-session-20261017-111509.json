@@ -1,0 +1,443 @@
+{
+  "protocol": "playtest-protocol@1.1",
+  "gameBuild": "3338e97",
+  "exportedAt": "2026-10-17T03:15:09.119Z",
+  "playerProfile": "novice",
+  "paceVerdict": null,
+  "notes": "还是在摸索，不大明白这怎么通关的",
+  "milestones": {
+    "lv2": 57,
+    "lv3": 219,
+    "lv4": 380
+  },
+  "chainBreaks": [
+    {
+      "tick": 224,
+      "buildingType": "eatery",
+      "kind": "material"
+    },
+    {
+      "tick": 224,
+      "buildingType": "eatery",
+      "kind": "material"
+    },
+    {
+      "tick": 224,
+      "buildingType": "eatery",
+      "kind": "material"
+    },
+    {
+      "tick": 224,
+      "buildingType": "eatery",
+      "kind": "material"
+    },
+    {
+      "tick": 225,
+      "buildingType": "eatery",
+      "kind": "material"
+    },
+    {
+      "tick": 229,
+      "buildingType": "eatery",
+      "kind": "material"
+    },
+    {
+      "tick": 236,
+      "buildingType": "eatery",
+      "kind": "material"
+    },
+    {
+      "tick": 270,
+      "buildingType": "carpenter",
+      "kind": "labor"
+    },
+    {
+      "tick": 271,
+      "buildingType": "carpenter",
+      "kind": "labor"
+    },
+    {
+      "tick": 278,
+      "buildingType": "carpenter",
+      "kind": "labor"
+    },
+    {
+      "tick": 315,
+      "buildingType": "eatery",
+      "kind": "labor"
+    },
+    {
+      "tick": 315,
+      "buildingType": "eatery",
+      "kind": "labor"
+    },
+    {
+      "tick": 316,
+      "buildingType": "eatery",
+      "kind": "labor"
+    },
+    {
+      "tick": 317,
+      "buildingType": "eatery",
+      "kind": "labor"
+    },
+    {
+      "tick": 318,
+      "buildingType": "eatery",
+      "kind": "labor"
+    },
+    {
+      "tick": 318,
+      "buildingType": "eatery",
+      "kind": "labor"
+    },
+    {
+      "tick": 319,
+      "buildingType": "eatery",
+      "kind": "labor"
+    },
+    {
+      "tick": 320,
+      "buildingType": "eatery",
+      "kind": "labor"
+    }
+  ],
+  "samples": [
+    {
+      "tick": 30,
+      "money": 167.5,
+      "wood": 15,
+      "grain": 100,
+      "food": 14.999999999999995,
+      "goods": 0,
+      "households": 5,
+      "housingCapacity": 6,
+      "laborDemand": 0,
+      "prosperity": 9,
+      "level": 1,
+      "buildingCount": 6,
+      "buildingBreakdown": {
+        "farm": 3,
+        "hut": 3
+      }
+    },
+    {
+      "tick": 60,
+      "money": 73.2500000000001,
+      "wood": 14,
+      "grain": 98,
+      "food": 1.5999999999999996,
+      "goods": 0,
+      "households": 6,
+      "housingCapacity": 10,
+      "laborDemand": 1,
+      "prosperity": 21,
+      "level": 2,
+      "buildingCount": 12,
+      "buildingBreakdown": {
+        "farm": 3,
+        "hut": 5,
+        "forest": 3,
+        "mill": 1
+      }
+    },
+    {
+      "tick": 90,
+      "money": 42.500000000000036,
+      "wood": 74,
+      "grain": 148,
+      "food": 13.10000000000001,
+      "goods": 0,
+      "households": 8,
+      "housingCapacity": 10,
+      "laborDemand": 1,
+      "prosperity": 23,
+      "level": 2,
+      "buildingCount": 13,
+      "buildingBreakdown": {
+        "farm": 3,
+        "hut": 5,
+        "forest": 3,
+        "mill": 1,
+        "granary": 1
+      }
+    },
+    {
+      "tick": 120,
+      "money": 26.750000000000043,
+      "wood": 144,
+      "grain": 146,
+      "food": 28.600000000000005,
+      "goods": 0,
+      "households": 10,
+      "housingCapacity": 10,
+      "laborDemand": 2,
+      "prosperity": 27,
+      "level": 2,
+      "buildingCount": 14,
+      "buildingBreakdown": {
+        "farm": 3,
+        "hut": 5,
+        "forest": 3,
+        "mill": 2,
+        "granary": 1
+      }
+    },
+    {
+      "tick": 150,
+      "money": 24.25000000000004,
+      "wood": 224,
+      "grain": 146,
+      "food": 53.60000000000001,
+      "goods": 0,
+      "households": 14,
+      "housingCapacity": 14,
+      "laborDemand": 2,
+      "prosperity": 29,
+      "level": 2,
+      "buildingCount": 16,
+      "buildingBreakdown": {
+        "farm": 3,
+        "hut": 7,
+        "forest": 3,
+        "mill": 2,
+        "granary": 1
+      }
+    },
+    {
+      "tick": 180,
+      "money": 11.25000000000009,
+      "wood": 269,
+      "grain": 146,
+      "food": 68.59999999999994,
+      "goods": 0,
+      "households": 14,
+      "housingCapacity": 14,
+      "laborDemand": 3,
+      "prosperity": 32,
+      "level": 2,
+      "buildingCount": 16,
+      "buildingBreakdown": {
+        "farm": 3,
+        "hut": 7,
+        "forest": 2,
+        "mill": 2,
+        "granary": 1,
+        "eatery": 1
+      }
+    },
+    {
+      "tick": 210,
+      "money": 55.250000000000156,
+      "wood": 279,
+      "grain": 146,
+      "food": 45.599999999999866,
+      "goods": 0,
+      "households": 14,
+      "housingCapacity": 14,
+      "laborDemand": 5,
+      "prosperity": 42,
+      "level": 2,
+      "buildingCount": 18,
+      "buildingBreakdown": {
+        "farm": 3,
+        "hut": 7,
+        "forest": 2,
+        "mill": 2,
+        "granary": 1,
+        "eatery": 3
+      }
+    },
+    {
+      "tick": 240,
+      "money": 40.000000000000206,
+      "wood": 189,
+      "grain": 146,
+      "food": 0,
+      "goods": 0,
+      "households": 12,
+      "housingCapacity": 14,
+      "laborDemand": 11,
+      "prosperity": 47.5,
+      "level": 2,
+      "buildingCount": 24,
+      "buildingBreakdown": {
+        "farm": 3,
+        "hut": 7,
+        "forest": 2,
+        "mill": 2,
+        "granary": 1,
+        "eatery": 9
+      }
+    },
+    {
+      "tick": 270,
+      "money": 194.2500000000002,
+      "wood": 184,
+      "grain": 164,
+      "food": 0,
+      "goods": 0,
+      "households": 6,
+      "housingCapacity": 14,
+      "laborDemand": 14,
+      "prosperity": 58.2,
+      "level": 3,
+      "buildingCount": 27,
+      "buildingBreakdown": {
+        "farm": 3,
+        "hut": 7,
+        "forest": 2,
+        "mill": 3,
+        "granary": 2,
+        "eatery": 9,
+        "carpenter": 1
+      }
+    },
+    {
+      "tick": 300,
+      "money": 277.0000000000002,
+      "wood": 190,
+      "grain": 194,
+      "food": 12.5,
+      "goods": 0,
+      "households": 6,
+      "housingCapacity": 14,
+      "laborDemand": 18,
+      "prosperity": 65.10000000000001,
+      "level": 3,
+      "buildingCount": 33,
+      "buildingBreakdown": {
+        "farm": 5,
+        "hut": 7,
+        "forest": 4,
+        "mill": 3,
+        "granary": 2,
+        "eatery": 9,
+        "carpenter": 3
+      }
+    },
+    {
+      "tick": 330,
+      "money": 157.5000000000004,
+      "wood": 90,
+      "grain": 192,
+      "food": 1.5000000000000058,
+      "goods": 0,
+      "households": 9,
+      "housingCapacity": 14,
+      "laborDemand": 27,
+      "prosperity": 91.60000000000001,
+      "level": 3,
+      "buildingCount": 42,
+      "buildingBreakdown": {
+        "farm": 5,
+        "hut": 7,
+        "forest": 4,
+        "mill": 4,
+        "granary": 2,
+        "eatery": 17,
+        "carpenter": 3
+      }
+    },
+    {
+      "tick": 360,
+      "money": 337.2500000000005,
+      "wood": 130,
+      "grain": 192,
+      "food": 4.499999999999997,
+      "goods": 0,
+      "households": 7,
+      "housingCapacity": 26,
+      "laborDemand": 27,
+      "prosperity": 97.60000000000001,
+      "level": 3,
+      "buildingCount": 47,
+      "buildingBreakdown": {
+        "farm": 7,
+        "hut": 7,
+        "forest": 4,
+        "mill": 4,
+        "granary": 2,
+        "eatery": 17,
+        "carpenter": 3,
+        "house": 3
+      }
+    },
+    {
+      "tick": 390,
+      "money": 618.2500000000008,
+      "wood": 275,
+      "grain": 192,
+      "food": 2.5000000000000053,
+      "goods": 0,
+      "households": 8,
+      "housingCapacity": 26,
+      "laborDemand": 27,
+      "prosperity": 105.10000000000001,
+      "level": 4,
+      "buildingCount": 49,
+      "buildingBreakdown": {
+        "farm": 7,
+        "hut": 7,
+        "forest": 6,
+        "mill": 4,
+        "granary": 2,
+        "eatery": 17,
+        "carpenter": 3,
+        "house": 3
+      }
+    },
+    {
+      "tick": 420,
+      "money": 944.5000000000008,
+      "wood": 455,
+      "grain": 192,
+      "food": 4.499999999999997,
+      "goods": 0,
+      "households": 7,
+      "housingCapacity": 26,
+      "laborDemand": 27,
+      "prosperity": 101.60000000000001,
+      "level": 4,
+      "buildingCount": 49,
+      "buildingBreakdown": {
+        "farm": 7,
+        "hut": 7,
+        "forest": 6,
+        "mill": 4,
+        "granary": 2,
+        "eatery": 17,
+        "carpenter": 3,
+        "house": 3
+      }
+    }
+  ],
+  "finalSnapshot": {
+    "tick": 380,
+    "money": 494.25000000000097,
+    "wood": 215,
+    "grain": 192,
+    "food": 10.50000000000001,
+    "goods": 0,
+    "households": 8,
+    "housingCapacity": 26,
+    "laborDemand": 27,
+    "prosperity": 101.60000000000001,
+    "level": 4,
+    "buildingCount": 49,
+    "buildingBreakdown": {
+      "farm": 7,
+      "hut": 7,
+      "forest": 6,
+      "mill": 4,
+      "granary": 2,
+      "eatery": 17,
+      "carpenter": 3,
+      "house": 3
+    },
+    "taxIncome": 0.4,
+    "commerceIncome": 9
+  },
+  "speedChanges": [],
+  "usedFastForward": false
+}

@@ -6,12 +6,78 @@ import { BUILDINGS } from './config/buildings.js';
 import { createInitialState } from './core/state.js';
 import { tick } from './core/simulation.js';
 import { placeBuilding, demolishBuilding, buildingAt, canAfford } from './core/grid.js';
-import { hasSave, loadGame, saveGame } from './core/save.js';
+import { hasSave, loadGame, saveGame, clearSave } from './core/save.js';
+import {
+  collect as collectTelemetry,
+  recordSpeedChange,
+  reset as resetTelemetry,
+  serialize as serializeTelemetry,
+  restore as restoreTelemetry,
+} from './core/telemetry.js';
 import { createCamera, attachCameraControls, screenToWorld, TILE } from './render/camera.js';
 import { render } from './render/renderer.js';
 import { createHud } from './ui/hud.js';
 import { createBuildMenu } from './ui/buildMenu.js';
 import { createInfoPanel } from './ui/infoPanel.js';
+import { createTelemetryPanel } from './ui/telemetryPanel.js';
+
+// 构建标识：试玩数据导出契约的 gameBuild 字段。
+// 由 vite.config.js 在构建期用 git（rev-parse + status --porcelain）注入，dev 与 build 均生效。
+// 降级链：define 常量 __GAME_BUILD__ → import.meta.env.VITE_GAME_BUILD → 'unknown'。
+// 兜底值刻意用 'unknown' 而非任何看起来像 commit 的字符串：假的真值比明显的错误值更危险
+// （B3 教训：硬编码 '3338e97' 让四局遥测版本号完全相同，无法区分玩家跑的是不是新代码）。
+// typeof 保护：define 未生效时也不会抛 ReferenceError，游戏照常启动。
+const GAME_BUILD =
+  (typeof __GAME_BUILD__ === 'string' && __GAME_BUILD__) ||
+  import.meta.env?.VITE_GAME_BUILD ||
+  'unknown';
+// dirty = 构建时工作区有未提交改动（改动尚未进 commit，导出的版本号不对应任何干净 commit）。
+// 独立布尔字段供分析脚本机读，避免去解析 gameBuild 字符串后缀。
+const GAME_BUILD_DIRTY =
+  typeof __GAME_BUILD_DIRTY__ === 'boolean'
+    ? __GAME_BUILD_DIRTY__
+    : /-dirty$/.test(GAME_BUILD);
+
+// telemetry 防丢失加固：独立 key，不与存档混用；「重开新局」时一并清除
+const TELEMETRY_KEY = 'songtown-telemetry-v1';
+
+function telemetryStorageAvailable() {
+  try {
+    return typeof localStorage !== 'undefined';
+  } catch {
+    return false;
+  }
+}
+
+function persistTelemetry() {
+  if (!telemetryStorageAvailable()) return;
+  try {
+    localStorage.setItem(TELEMETRY_KEY, JSON.stringify(serializeTelemetry()));
+  } catch {
+    // 隐私模式/配额满：静默降级（内存数据仍在，导出面板照常工作）
+  }
+}
+
+// 中途刷新后恢复采集（与存档续玩配套）。数据损坏/缺失时返回 false → 调用方按新局处理。
+function loadPersistedTelemetry() {
+  if (!telemetryStorageAvailable()) return false;
+  try {
+    const raw = localStorage.getItem(TELEMETRY_KEY);
+    if (!raw) return false;
+    return restoreTelemetry(JSON.parse(raw));
+  } catch {
+    return false;
+  }
+}
+
+function clearPersistedTelemetry() {
+  if (!telemetryStorageAvailable()) return;
+  try {
+    localStorage.removeItem(TELEMETRY_KEY);
+  } catch {
+    // 同上，静默
+  }
+}
 
 const canvas = document.getElementById('game');
 const uiRoot = document.getElementById('ui');
@@ -34,12 +100,18 @@ window.addEventListener('resize', resize);
 resize();
 
 // ---------- state ----------
+// telemetry 与存档同生命周期：载入存档续玩 → 恢复采集；开新局 → 清空采集
 function initState() {
   if (hasSave() && window.confirm('检测到存档，继续上次进度？\n（取消则开新局）')) {
     const loaded = loadGame(createInitialState);
-    if (loaded) return loaded;
+    if (loaded) {
+      if (!loadPersistedTelemetry()) resetTelemetry(); // 存档在而采集数据缺失/损坏：从现在开始采
+      return loaded;
+    }
     // 版本不符或损坏：静默开新局
   }
+  resetTelemetry();
+  clearPersistedTelemetry();
   return createInitialState();
 }
 const state = initState();
@@ -58,13 +130,15 @@ function markDirty() {
 }
 
 let toastTimer = 0;
-function showToast(msg) {
+function showToast(msg, { grand = false } = {}) {
   toast.textContent = msg;
+  toast.classList.toggle('grand', grand); // UX-2：Lv4 通关 toast 强化样式
   toast.style.display = 'block';
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => {
     toast.style.display = 'none';
-  }, 2000);
+    toast.classList.remove('grand');
+  }, grand ? 4000 : 2000);
 }
 
 // 建造失败原因 → 中文提示。core 返回结构化 reason（便于程序判定），本地化在展示层做
@@ -89,18 +163,38 @@ function buildFailMessage(r) {
 
 const hud = createHud(uiRoot, {
   onSpeed: (s) => {
+    recordSpeedChange(s, state.tick); // 采集：变速事件（tick 为当前游戏内时间）
     speed = s;
     acc = 0; // 变速时丢弃残余，避免暂停后补帧暴冲
   },
   onSave: () => {
     showToast(saveGame(state) ? '已保存' : '当前环境不支持存档');
   },
+  onRestart: () => {
+    // 重开新局：清存档 + 清采集数据（含 localStorage 加固副本）+ 刷新页面
+    if (!window.confirm('确定重开新局？当前进度与试玩采集数据将被清除。')) return;
+    clearSave();
+    resetTelemetry();
+    clearPersistedTelemetry();
+    window.location.reload();
+  },
+  onTelemetry: () => {
+    // 关闭后可从 HUD「试玩数据」按钮重开；面板数据每次 show 时从记录器实时取
+    telemetryPanel.show();
+  },
+});
+
+const telemetryPanel = createTelemetryPanel(uiRoot, {
+  gameBuild: GAME_BUILD,
+  gameBuildDirty: GAME_BUILD_DIRTY,
 });
 
 const buildMenu = createBuildMenu(uiRoot, {
   onSelect: (type) => {
     state.ui.placingType = state.ui.placingType === type ? null : type;
     state.ui.selectedBuildingId = null;
+    // UX-2：玩家选中高亮建筑即视为已注意到，撤掉高亮
+    if (state.ui.highlightType === type) state.ui.highlightType = null;
     markDirty();
   },
 });
@@ -180,24 +274,40 @@ window.addEventListener('keydown', (e) => {
 let speed = 1; // 0 暂停 / 1 / 2
 let acc = 0;
 let last = performance.now();
-let prevLevel = state.level;
+// P3 解锁粘性：升级 toast 跟踪 maxLevel（只升不降），瞬时繁荣度回落再回升不重复弹
+let prevMaxLevel = state.maxLevel ?? state.level;
 let lastAutosaveTick = state.tick;
 
 function afterTick() {
-  if (state.level > prevLevel) {
+  // 采集：每 tick 只读观察（milestones / chainBreaks / samples / finalSnapshot）
+  collectTelemetry(state);
+
+  if (state.maxLevel > prevMaxLevel) {
     const names = Object.values(BUILDINGS)
-      .filter((d) => d.unlockLevel === state.level)
+      .filter((d) => d.unlockLevel === state.maxLevel)
       .map((d) => d.name)
       .join('、');
-    showToast(`市井渐兴——解锁【${names}】`);
-    prevLevel = state.level;
+    if (state.maxLevel >= 4) {
+      // UX-2：Lv4 达成 toast 强化 + 建造菜单高亮杂货摊
+      showToast(`繁华大成——${names}已解锁`, { grand: true });
+      state.ui.highlightType = 'grocer';
+    } else {
+      showToast(`市井渐兴——解锁【${names}】`);
+    }
+    prevMaxLevel = state.maxLevel;
+    // Lv4 通关 toast 时自动弹出试玩数据面板（玩家零负担：数据已自动采好）
+    if (state.maxLevel >= 4) telemetryPanel.show();
   }
   if (state.tick - lastAutosaveTick >= RULES.autosaveInterval) {
     lastAutosaveTick = state.tick;
     saveGame(state);
+    persistTelemetry(); // 与自动存档同节奏持久化，防中途刷新丢失
   }
   markDirty();
 }
+
+// 离开页面前兜底持久化（beforeunload 时同步写，防最后一段未到自动存档间隔的数据丢失）
+window.addEventListener('beforeunload', persistTelemetry);
 
 function frame(now) {
   const dt = Math.min(now - last, 250); // 切标签页回来时钳制，避免补帧暴冲

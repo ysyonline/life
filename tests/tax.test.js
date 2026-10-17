@@ -133,7 +133,7 @@ describe('市税不受运转系数影响', () => {
     expect(state.money - before).toBeCloseTo(full, 5); // 8 户 × 0.05 = 0.4
   });
 
-  it('繁荣度降权（0.3）不会把市税一起降权', () => {
+  it('断链建筑繁荣度不计分（idle=0）不影响市税结算', () => {
     const spot = findSpot(state, null, 2, 2);
     placeBuilding(state, 'mill', spot.x, spot.y);
     state.population.count = 4;
