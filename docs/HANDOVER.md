@@ -169,8 +169,10 @@ node scratch/factory-town-replay2.mjs                         # 工厂镇独立�
 ### 6.5 版本控制状态（交接时必须交代）
 
 - **`5c424f9`（2026-10-17 19:18）**「feat: 节奏调参组合拳实施 + 两轮真人试玩判定与失效归因」——含截至本轮的全部交付：调参实施 P1/P2/P3 + UX-1/UX-2、遥测采集、试玩协议 v1.2、四局真人数据、两轮判定报告、归因报告 v1.4、B3 修复、P-1′ 影响清单。47 文件 / +8907 行。
-- **有意未纳入版本库**：`.playwright-cli/`、`.smoke/`、`.workbuddy/`（本地工具产物，保持 untracked）；`node_modules/`、`dist/` 由 `.gitignore` 排除。**建议后续把前三个也写进 `.gitignore`**，本轮未改动 `.gitignore`，待用户定。
-- **待提交（第二次，2026-10-17 晚）**：D0 选 A 执行件已就位未提交——① `src/core/telemetry.js`（阈值派生）；② `tests/verification/progression.test.js`（新 bot + legacy 归档 + R-bot3 看门狗，33/33 绿）；③ `tests/config.test.js`（D10 快照，104/104 绿）；④ `scratch/`（pacing-sim11/12.mjs、factory-town-policy.txt、factory-town-replay2.mjs 等探针与留档，factory-town-replay.mjs 为过程调试件可删）；⑤ docs（HANDOVER 基线升版 + 04 N2 立项建议 + 03 v1.5 待参数拍板后更新）。**建议拆两条提交**：① bot 修复 + 遥测派生（src/tests）；② D10 快照测试 + 探针留档 + 文档。P-1′ 参数实施（封顶/阈值改动 + 七条开发自测重写 + 协议文档同步）待 D-P1′ 拍板后进行，届时单独提交。**所有提交需用户许可。**
+- **`45b7075`（2026-10-17 21:45）**「fix(verification): 修验收 bot + 遥测阈值派生（D0 选 A 执行件）」——bot 修复（R-bot1/R-bot2 + 旧 bot 归档看门狗）+ 遥测阈值派生。2 文件 / +102 行。
+- **`cdba654`（2026-10-17 21:46）**「test+docs: D10 配置快照 + 节奏探针留档 + N2 立项建议与交接总账」——D10 快照测试（18 用例）、探针留档（sim11/12、工厂镇档案与复放）、04 N2 立项建议 v1.1、HANDOVER 基线升版与 P0 记录。8 文件 / +1157 行。
+- **有意未纳入版本库**：`.playwright-cli/`、`.smoke/`、`.workbuddy/`（本地工具产物，保持 untracked）；`scratch/factory-town-replay.mjs`（过程调试件，未提交，可删）；`node_modules/`、`dist/` 由 `.gitignore` 排除。**建议后续把前三个也写进 `.gitignore`**，本轮未改动 `.gitignore`，待用户定。
+- **工作区干净**（除上述 untracked 项）。P-1′ 参数实施（封顶/阈值改动 + 七条开发自测重写 + 协议文档同步 + 03 升 v1.5）待 D-P1′ 拍板后进行，届时单独提交。
 
 ## 7. 纪律备忘（给下一位接手者）
 
