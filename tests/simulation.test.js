@@ -136,15 +136,15 @@ describe('生产链结算', () => {
 });
 
 describe('人口', () => {
-  it('有空房且食 > 安全线时，每 5 tick 迁入 1 户', () => {
+  it('有空房且食 > 安全线时，按 moveInInterval 间隔迁入', () => {
     const spot = findSpot(state, null, 1, 1);
     placeBuilding(state, 'hut', spot.x, spot.y); // 容量 2
     expect(state.resources.food).toBeGreaterThan(RULES.foodSafetyLine);
 
-    runTicks(5);
+    runTicks(RULES.moveInInterval);
     expect(state.population.count).toBe(1);
 
-    runTicks(5);
+    runTicks(RULES.moveInInterval);
     expect(state.population.count).toBe(2);
   });
 
@@ -265,15 +265,16 @@ describe('繁荣度与解锁', () => {
     expect(computeProsperity(state)).toBe(1);
   });
 
-  it('等级按阈值 0/20/50/100 划分', () => {
-    expect(computeLevel(0)).toBe(1);
-    expect(computeLevel(19)).toBe(1);
-    expect(computeLevel(20)).toBe(2);
-    expect(computeLevel(49)).toBe(2);
-    expect(computeLevel(50)).toBe(3);
-    expect(computeLevel(99)).toBe(3);
-    expect(computeLevel(100)).toBe(4);
-    expect(computeLevel(500)).toBe(4); // 最高 4 级封顶
+  it('等级按 unlockThresholds 划分（派生式：调阈值本用例不再红）', () => {
+    const ths = RULES.unlockThresholds;
+    expect(computeLevel(-1)).toBe(1);
+    expect(computeLevel(ths[1] - 0.1)).toBe(1);
+    expect(computeLevel(ths[1])).toBe(2);
+    expect(computeLevel(ths[2] - 0.1)).toBe(2);
+    expect(computeLevel(ths[2])).toBe(3);
+    expect(computeLevel(ths[3] - 0.1)).toBe(3);
+    expect(computeLevel(ths[3])).toBe(4);
+    expect(computeLevel(ths[3] + 1000)).toBe(4); // 最高 4 级封顶
   });
 
   it('tick 后 state.level 随繁荣度更新', () => {
@@ -295,17 +296,17 @@ describe('解锁粘性（P3：maxLevel 只升不降）', () => {
   it('升到 Lv3 后繁荣度回落，建造判定仍按 maxLevel 解锁（不再重锁）', () => {
     state.money = 100000;
     state.resources.wood = 100000;
-    // 50 座住满茅舍 = 50 分 → Lv3
-    for (let i = 0; i < 50; i++) {
+    // 60 座住满茅舍 = 60 分 → Lv3（O6′ 阈值 60）
+    for (let i = 0; i < 60; i++) {
       const s = findSpot(state, null, 1, 1);
       placeBuilding(state, 'hut', s.x, s.y);
     }
-    state.population.count = 100; // 住满（总容量 50×2）
+    state.population.count = 120; // 住满（总容量 60×2）
     tick(state);
     expect(state.level).toBe(3);
     expect(state.maxLevel).toBe(3);
 
-    // 繁荣度回落：户数跌到 10 → 民居得分 50 × 0.1 = 5 → 瞬时等级跌回 Lv1
+    // 繁荣度回落：户数跌到 10 → 民居得分 60 × (10/120) ≈ 5 → 瞬时等级跌回 Lv1
     state.population.count = 10;
     tick(state);
     expect(state.level).toBe(1);
@@ -325,9 +326,77 @@ describe('解锁粘性（P3：maxLevel 只升不降）', () => {
     expect(state.maxLevel).toBe(1);
 
     // 瞬时等级被人为抬高（等价于繁荣度冲高），maxLevel 跟上
-    state.prosperity = 100;
+    state.prosperity = RULES.unlockThresholds[3];
     state.level = computeLevel(state.prosperity);
     tick(state); // tick 内重算 level，但 maxLevel 已记录
     expect(state.maxLevel).toBeGreaterThanOrEqual(state.level);
+  });
+});
+
+describe('恒计分封顶（P-1′ O6′：farm/forest/granary 合计 ≤ 26）', () => {
+  it('合计低于封顶时全额计分', () => {
+    state.money = 100000;
+    state.resources.wood = 100000;
+    for (let i = 0; i < 3; i++) {
+      const s = findSpot(state, 'fertile', 2, 2);
+      placeBuilding(state, 'farm', s.x, s.y);
+    }
+    state.population.count = 4;
+    tick(state);
+    expect(computeProsperity(state)).toBe(6); // 3×2=6 < 26
+  });
+
+  it('合计恰等于封顶时不截断（边界 26）', () => {
+    state.money = 100000;
+    state.resources.wood = 100000;
+    for (let i = 0; i < 13; i++) {
+      const s = findSpot(state, 'fertile', 2, 2);
+      placeBuilding(state, 'farm', s.x, s.y);
+    }
+    state.population.count = 4;
+    tick(state);
+    expect(computeProsperity(state)).toBe(26); // 13×2=26
+  });
+
+  it('合计超过封顶时按 26 截断', () => {
+    state.money = 100000;
+    state.resources.wood = 100000;
+    for (let i = 0; i < 14; i++) {
+      const s = findSpot(state, 'fertile', 2, 2);
+      placeBuilding(state, 'farm', s.x, s.y);
+    }
+    state.population.count = 4;
+    tick(state);
+    expect(computeProsperity(state)).toBe(26); // 14×2=28 → 26
+  });
+
+  it('粮仓计入封顶合计（跨类合计后截断）', () => {
+    state.money = 100000;
+    state.resources.wood = 100000;
+    state.level = BUILDINGS.granary.unlockLevel; // 粮仓 Lv2 解锁
+    for (let i = 0; i < 12; i++) {
+      const s = findSpot(state, 'fertile', 2, 2);
+      placeBuilding(state, 'farm', s.x, s.y);
+    }
+    const g = findSpot(state, null, 2, 2);
+    placeBuilding(state, 'granary', g.x, g.y);
+    state.population.count = 4;
+    tick(state);
+    expect(computeProsperity(state)).toBe(26); // 12×2 + 2 = 26
+  });
+
+  it('非恒计分建筑不受封顶影响（封顶后加工/商业分另算）', () => {
+    state.money = 100000;
+    state.resources.wood = 100000;
+    for (let i = 0; i < 13; i++) {
+      const s = findSpot(state, 'fertile', 2, 2);
+      placeBuilding(state, 'farm', s.x, s.y);
+    }
+    const m = findSpot(state, null, 2, 2);
+    placeBuilding(state, 'mill', m.x, m.y);
+    state.population.count = 4;
+    state.resources.grain = 10;
+    tick(state);
+    expect(computeProsperity(state)).toBe(30); // 恒计分 26（封顶）+ 磨坊 4
   });
 });

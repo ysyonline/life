@@ -1,8 +1,8 @@
 // D10 配置基线快照测试：把全部数值钉死在期望值上。
 // 目的（02 文档 §2.5 / HANDOVER §7.6）：任何数值改动（哪怕"看着合理"）都会让本文件红，
 // 逼着改动走「确认是有意调整 → 更新快照 → 过双套测试」的流程——数值不能被无声地改。
-// ⚠ 本文件 pin 的是【现网值】。P-1′（封顶24 + 60/150）尚未实施；将来实施时本文件会红，
-//    届时按「确认有意调整」流程更新快照值——这正是本测试的设计目的。
+// ⚠ 本文件 pin 的是【现网值】（2026-10-18 起 = O6′：封顶 26 + 阈值 20/60/145）。任何数值改动都会红，
+//    须走「确认有意调整 → 更新快照」流程——这正是本测试的设计目的。
 import { describe, it, expect } from 'vitest';
 import { BUILDINGS, validateConfig } from '../src/config/buildings.js';
 import { RULES } from '../src/config/rules.js';
@@ -39,8 +39,8 @@ describe('配置基线快照（D10）', () => {
     });
   }
 
-  it('RULES.unlockThresholds = [0, 20, 50, 100]（Lv1~Lv4）', () => {
-    expect(RULES.unlockThresholds).toEqual([0, 20, 50, 100]);
+  it('RULES.unlockThresholds = [0, 20, 60, 145]（Lv1~Lv4，D-P1′ O6′）', () => {
+    expect(RULES.unlockThresholds).toEqual([0, 20, 60, 145]);
   });
 
   it('RULES.moveInInterval = 5（每 5 tick 迁入 1 户）', () => {
@@ -66,6 +66,10 @@ describe('配置基线快照（D10）', () => {
 
   it('RULES 繁荣度系数：active=1.0 / idle=0（P1：闲置不计分）', () => {
     expect(RULES.prosperityCoef).toEqual({ active: 1.0, idle: 0 });
+  });
+
+  it('RULES.prosperityPassiveCap = { buildings: [farm,forest,granary], max: 26 }（D-P1′ O6′ 恒计分封顶）', () => {
+    expect(RULES.prosperityPassiveCap).toEqual({ buildings: ['farm', 'forest', 'granary'], max: 26 });
   });
 
   it('RULES 初始资源与预算：240 钱 / 60 木 / 20 粮 / 20 食', () => {

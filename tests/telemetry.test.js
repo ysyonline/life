@@ -18,6 +18,7 @@ import {
   SAMPLE_INTERVAL,
 } from '../src/core/telemetry.js';
 import { findSpot } from './helpers.js';
+import { RULES } from '../src/config/rules.js';
 
 let state;
 
@@ -63,7 +64,7 @@ describe('里程碑（M1~M3）', () => {
   });
 
   it('Lv4 首达瞬间记录 finalSnapshot（含税/商业收入），且只记一次', () => {
-    state.prosperity = 100;
+    state.prosperity = RULES.unlockThresholds[3];
     state.level = 4;
     state.population.count = 10;
     collect(state);
@@ -77,7 +78,7 @@ describe('里程碑（M1~M3）', () => {
 
     // 后续 tick 不再覆盖
     state.tick = 50;
-    state.prosperity = 120;
+    state.prosperity = RULES.unlockThresholds[3] + 20;
     collect(state);
     d = getTelemetryData();
     expect(d.finalSnapshot.tick).toBe(0);
@@ -143,6 +144,7 @@ describe('采样（samples）', () => {
       'tick', 'money', 'wood', 'grain', 'food', 'goods',
       'households', 'housingCapacity', 'laborDemand',
       'prosperity', 'level', 'buildingCount', 'buildingBreakdown',
+      'scarcityMaterial', 'scarcityLabor',
     ];
     for (const s of d.samples) {
       for (const k of keys) expect(s).toHaveProperty(k);
@@ -180,6 +182,80 @@ describe('变速（speedChanges）', () => {
   });
 });
 
+describe('逐帧稀缺标记（D-N2-4）', () => {
+  it('缺料/缺人 tick 分别记入 materialTicks/laborTicks，无稀缺 tick 不记', () => {
+    const a = findSpot(state, null, 2, 2);
+    placeBuilding(state, 'mill', a.x, a.y); // 拿到劳力但缺料 → material
+    const b = findSpot(state, null, 2, 2);
+    placeBuilding(state, 'mill', b.x, b.y); // 无劳力 → labor
+    state.population.count = 1;
+    state.resources.grain = 0;
+    runTicks(2);
+    const d = getTelemetryData();
+    expect(d.scarcity.materialTicks).toEqual([1, 2]);
+    expect(d.scarcity.laborTicks).toEqual([1, 2]);
+  });
+
+  it('无稀缺的 tick 不记录（空转帧 = 并集之外）', () => {
+    const s = findSpot(state, 'fertile', 2, 2);
+    placeBuilding(state, 'farm', s.x, s.y); // 恒计分建筑不闲置
+    state.population.count = 2;
+    runTicks(3);
+    const d = getTelemetryData();
+    expect(d.scarcity.materialTicks).toEqual([]);
+    expect(d.scarcity.laborTicks).toEqual([]);
+  });
+
+  it('samples 附带窗口内稀缺计数，且落盘后清零', () => {
+    const a = findSpot(state, null, 2, 2);
+    placeBuilding(state, 'mill', a.x, a.y);
+    state.population.count = 0; // 持续缺人
+    state.resources.grain = 10;
+    runTicks(SAMPLE_INTERVAL); // 30 tick 全缺人
+    expect(getTelemetryData().samples[0].scarcityLabor).toBe(SAMPLE_INTERVAL);
+    expect(getTelemetryData().samples[0].scarcityMaterial).toBe(0);
+    // 下一窗口无稀缺 → 计数归零
+    state.population.count = 4;
+    runTicks(SAMPLE_INTERVAL);
+    expect(getTelemetryData().samples[1].scarcityLabor).toBe(0);
+  });
+
+  it('serialize → restore 往返保留 scarcity；旧档缺失 scarcity 字段可恢复（缺省空数组）', () => {
+    const a = findSpot(state, null, 2, 2);
+    placeBuilding(state, 'mill', a.x, a.y);
+    state.population.count = 0;
+    runTicks(5);
+    const saved = serialize();
+    reset();
+    expect(restore(JSON.parse(JSON.stringify(saved)))).toBe(true);
+    expect(getTelemetryData().scarcity.materialTicks).toEqual([]);
+    expect(getTelemetryData().scarcity.laborTicks).toEqual([1, 2, 3, 4, 5]);
+
+    // 旧档（v1.1/v1.2 无 scarcity）：剔除字段后仍可恢复，缺省空数组
+    reset();
+    const legacy = JSON.parse(JSON.stringify(saved));
+    delete legacy.scarcity;
+    expect(restore(legacy)).toBe(true);
+    expect(getTelemetryData().scarcity).toEqual({ materialTicks: [], laborTicks: [] });
+
+    // scarcity 存在但格式非法 → 拒绝
+    reset();
+    const bad = JSON.parse(JSON.stringify(saved));
+    bad.scarcity = { materialTicks: 'x', laborTicks: [] };
+    expect(restore(bad)).toBe(false);
+  });
+
+  it('reset 清空 scarcity', () => {
+    const a = findSpot(state, null, 2, 2);
+    placeBuilding(state, 'mill', a.x, a.y);
+    state.population.count = 0;
+    runTicks(2);
+    reset();
+    const d = getTelemetryData();
+    expect(d.scarcity).toEqual({ materialTicks: [], laborTicks: [] });
+  });
+});
+
 describe('reset', () => {
   it('清空全部采集数据', () => {
     state.prosperity = 20;
@@ -211,9 +287,9 @@ describe('reset', () => {
   });
 });
 
-describe('导出契约（playtest-protocol@1.1 §4.2：扁平结构）', () => {
+describe('导出契约（playtest-protocol@1.3 §4.2：扁平结构）', () => {
   it('buildExportPayload 顶层字段与协议对齐，无 session 包装层', () => {
-    state.prosperity = 100;
+    state.prosperity = RULES.unlockThresholds[3];
     state.level = 4;
     collect(state);
     recordSpeedChange(1, 0);
@@ -227,10 +303,10 @@ describe('导出契约（playtest-protocol@1.1 §4.2：扁平结构）', () => {
     });
     expect(Object.keys(payload)).toEqual([
       'protocol', 'gameBuild', 'gameBuildDirty', 'exportedAt', 'playerProfile', 'paceVerdict',
-      'notes', 'milestones', 'chainBreaks', 'samples', 'finalSnapshot', 'speedChanges',
+      'notes', 'milestones', 'chainBreaks', 'scarcity', 'samples', 'finalSnapshot', 'speedChanges',
       'usedFastForward',
     ]);
-    expect(payload.protocol).toBe('playtest-protocol@1.1');
+    expect(payload.protocol).toBe('playtest-protocol@1.3');
     expect(payload.gameBuild).toBe('3338e97-dirty');
     expect(payload.gameBuildDirty).toBe(true);
     expect(payload.exportedAt).toBe('2026-10-18T10:00:00.000Z');
@@ -263,7 +339,7 @@ describe('导出契约（playtest-protocol@1.1 §4.2：扁平结构）', () => {
   });
 
   it('finalSnapshot 含 taxIncome / commerceIncome / buildingBreakdown', () => {
-    state.prosperity = 100;
+    state.prosperity = RULES.unlockThresholds[3];
     state.level = 4;
     state.population.count = 10;
     const spot = findSpot(state, null, 1, 1);
@@ -283,7 +359,7 @@ describe('持久化往返（serialize / restore）', () => {
     state.population.count = 0;
     runTicks(SAMPLE_INTERVAL + 5);
     recordSpeedChange(2, 40);
-    state.prosperity = 100;
+    state.prosperity = RULES.unlockThresholds[3];
     state.level = 4;
     collect(state);
 
@@ -312,7 +388,7 @@ describe('持久化往返（serialize / restore）', () => {
 
 describe('面板摘要辅助', () => {
   it('buildSummary：tick 换算分钟、终局户数/建筑数', () => {
-    state.prosperity = 100;
+    state.prosperity = RULES.unlockThresholds[3];
     state.level = 4;
     state.population.count = 12;
     const spot = findSpot(state, null, 1, 1);

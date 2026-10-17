@@ -75,6 +75,7 @@ function botBuildLegacy(state) {
 // 新基线（现网配置 20/50/100、迁入 5，2026-10-17 实测）：
 //   V2 初始资源通关 = Lv2@12 / Lv3@280 / Lv4@480
 //   V1 注入铜钱 100000 = Lv4@106
+//   O6′ 基线（封顶26 + 20/60/145，迁入 5，2026-10-18 实测）：V2 = Lv2@12/Lv3@355/Lv4@605；V1 注入铜钱 = Lv4@211
 function botBuild(state) {
   const lvl = state.level;
   const cap = housingCapacity(state);
@@ -189,23 +190,24 @@ describe('通关推演（独立验收）', () => {
     expect(r.levelAt[4]).not.toBeNull();
   });
 
-  // R-bot3 基线复现门槛（D0 选 A 的实施约束）：旧 bot（botBuildLegacy）在现网配置下
-  // 必须逐字复现历史基线 V2=12/315/515 与 V1=91。若此用例红，说明现网配置相对
-  // 2026-10-17 基线发生了漂移，新旧 bot 读数对照全部失效，须先查配置再谈其他。
-  it('基线复现（R-bot3）：旧版 bot 在现网配置下必须复现历史基线 V2 12/315/515 与 V1 91 tick', () => {
+  // R-bot3 基线复现门槛（D0 选 A 的实施约束）：2026-10-18 O6′ 有意配置变更后重钉。
+  // 旧 bot 读数随配置漂移属预期，本用例看守的是**当前配置下的确定性**——任何未来无意漂移都会红。
+  // 归档 pre-O6′ 读数（配置 20/50/100 无封顶，2026-10-17 基线）：V2 = 12/315/515、V1 = 91。
+  // O6′ 下旧 bot 结构性卡死 Lv3（封顶 −12 分 + N3 杂货摊鸡生蛋），Lv4 = null。
+  it('基线复现（R-bot3）：旧版 bot 在 O6′ 配置下复现重钉基线 V2 12/401/null 与 V1 Lv4=null', () => {
     const s1 = createInitialState();
     const r1 = playthrough(s1, botBuildLegacy, 2000);
     console.log('[验收] 旧bot基线复现（V2）:', JSON.stringify({
       到Lv2: r1.levelAt[2], 到Lv3: r1.levelAt[3], 到Lv4: r1.levelAt[4],
     }));
     expect(r1.levelAt[2]).toBe(12);
-    expect(r1.levelAt[3]).toBe(315);
-    expect(r1.levelAt[4]).toBe(515);
+    expect(r1.levelAt[3]).toBe(401);
+    expect(r1.levelAt[4]).toBeNull(); // O6′ 下旧 bot 结构性卡死 Lv3（封顶 −12 分 + N3 杂货摊鸡生蛋），归档见上
 
     const s2 = createInitialState();
     s2.money = 100000;
     const r2 = playthrough(s2, botBuildLegacy, 2000);
     console.log('[验收] 旧bot基线复现（V1 注入铜钱）:', JSON.stringify({ 到Lv4: r2.levelAt[4] }));
-    expect(r2.levelAt[4]).toBe(91);
+    expect(r2.levelAt[4]).toBeNull(); // 同上：注入铜钱也救不回（最高繁荣度 ≈92.6 < 145）
   });
 });

@@ -1,8 +1,14 @@
 # 《市井繁华》真人试玩数据采集方案（Playtest 采集协议）
 
-> 版本 v1.2（玩家零负担版） · 修订日期 2026-10-17 · 产出：严守真（quality-lead）
+> 版本 v1.3（O6′ 口径同步版） · 修订日期 2026-10-18 · 产出：严守真（quality-lead）
 > 适用对象：P1.5 灰盒版，解决 HANDOVER 6.1 阻塞项「节奏偏快，缺真人试玩数据」
 > 上游依据：`docs/design/01-game-design.md` 5.4 调参目标 + 8.6 节奏纪律；`docs/HANDOVER.md` 6.1
+> **v1.3 变更**（依据 D-P1′ O6′ 拍板 2026-10-17、P-1′ 实施批次 2026-10-18，含 D-N2-4）：
+> ① M2/M3 阈值口径同步 O6′：Lv3 ≥50→**≥60**、Lv4 ≥100→**≥145**（Lv2 ≥20 不变）；里程碑阈值现由采集模块从 `RULES.unlockThresholds` 派生（telemetry.js），今后调阈值协议口径自动跟随，不再脱节；
+> ② 新增 **M9 空转帧占比**（D-N2-4 拍板入协议）：采集逐帧缺料/缺人标记（`scarcity.materialTicks/laborTicks`）与采样窗口计数（samples 的 `scarcityMaterial/scarcityLabor`）；**参考线 <40% 为无实测锚点的探索目标**（实测最低为小城模式 67.3%），**不作硬 Gate**，终判以真人试玩为主；
+> ③ JSON schema 版本号 playtest-protocol@1.1 → **@1.3**（与导出实现一致）；
+> ④ §5.1 bot 参照与附录核对记录升版至 O6′ 基线（新 bot V2=12/355/605、V1=211）；v1.2 及之前的 bot 参照 tick（11/286/504）为 pre-D0 旧 bot 口径，仅作历史归档；
+> ⑤ 规则 4 杠杆数值（Lv3 50→60 / Lv4 100→120）为 pre-O6′ 历史口径——50→60 已随 O6′ 落地，100→120 已被双 Gate 实测否决；后续杠杆数值须由设计侧从现行阈值（20/60/145 + 恒计分封顶 26）重新标定，本协议不再预置具体数字。
 > **v1.2 变更**（依据 `playtest-judgment-20261017.md` §1/§7.3 与设计决策 D2）：
 > ① 规则 3 偏离判定改为语义明确表述（偏快：实测 < 目标 × 0.7；偏慢：实测 > 目标 × 1.3），消除原「偏离度 > +30%（偏快方向）」的符号歧义；
 > ② 规则 0 开局校验口径修正：samples 首帧实际在 tick 30（collect 在 tick 递增后调用），不存在 tick 0 帧，改为「首帧快照 + 开销推算」人工核验；
@@ -15,7 +21,7 @@
 
 ## 0. 一句话目的
 
-用**真人试玩的到达时刻数据**回答一个问题：**当前节奏相对目标（普通玩家 2~3/13/21 分钟，Lv2 目标 v1.2 起按决策 D2 下修）偏离是否超过 30%？** 超过 → 只动阈值杠杆（Lv3 50→60 或 Lv4 100→120）；未超过 → 不动。
+用**真人试玩的到达时刻数据**回答一个问题：**当前节奏相对目标（普通玩家 2~3/13/21 分钟，Lv2 目标 v1.2 起按决策 D2 下修）偏离是否超过 30%？** 超过 → 只动阈值杠杆（具体数值由设计侧从现行阈值 60/145 起重新标定；v1.2 预置的 50→60 / 100→120 为 pre-O6′ 历史口径，见规则 4）；未超过 → 不动。
 
 **v1.1 核心原则**：玩家只负责「玩」，采集、计时、记录全部由游戏内自动采集模块在背后完成。玩家唯一要做的是通关后在面板上点两下（可选）并导出文件。
 
@@ -28,8 +34,10 @@
 | # | 指标 | 定义 | 采集方式 | 记录格式 |
 |---|---|---|---|---|
 | M1 | Lv2 到达时刻 | 繁荣度首次 ≥ 20 的游戏内 tick | **自动**（升级事件精确记录） | tick 数（整数） |
-| M2 | Lv3 到达时刻 | 繁荣度首次 ≥ 50 的游戏内 tick | **自动** | 同上 |
-| M3 | Lv4 到达时刻（通关） | 繁荣度首次 ≥ 100 的游戏内 tick | **自动** | 同上 |
+| M2 | Lv3 到达时刻 | 繁荣度首次 ≥ **60**（v1.3，O6′）的游戏内 tick | **自动** | 同上 |
+| M3 | Lv4 到达时刻（通关） | 繁荣度首次 ≥ **145**（v1.3，O6′）的游戏内 tick | **自动** | 同上 |
+
+> **v1.3 口径说明**：M1~M3 阈值与 `RULES.unlockThresholds`（现 20/60/145）同源——采集模块从配置派生，今后调阈值无需改本表，但仍须在版本变更记录里留痕。
 
 **为什么记 tick 而不是分钟**：1 tick = 1 秒（`rules.tickMs: 1000`），tick 是节奏的物理量，不受 2× 加速、暂停、卡顿污染；分钟只是 tick 的展示换算（tick ÷ 60）。判定规则（第 5 章）全部以 tick 为准。
 
@@ -42,6 +50,9 @@
 | M6 | 通关终局数据 | 到达 Lv4 瞬间的全量快照 | **自动**（通关瞬间 finalSnapshot） |
 | M7 | 主观节奏评价 | 整体太快 / 适中 / 太慢 | **通关面板一键选择**（可不选） |
 | M8 | 2× 使用情况 | 本局是否用过 2×、变速时刻 | **自动**（speedChanges + usedFastForward） |
+| M9 | 空转帧占比（v1.3 新增，D-N2-4） | 无任何缺料/缺人约束的帧占比 = 1 − \|scarcity.materialTicks ∪ scarcity.laborTicks\| ÷ 总 tick 数 | **自动**（逐帧稀缺标记；samples 另带 30 tick 窗口计数 scarcityMaterial/scarcityLabor） |
+
+> **M9 判定口径（D-N2-4 拍板）**：参考线 **< 40%** 是**无实测锚点的探索目标**（现网实测最低为小城模式 67.3%），**不作硬 Gate**；高占比与玩家水平正相关（抬阈值惩罚的恰是玩得好的人），终判以真人试玩体验为主。
 
 ### 1.3 M6 终局快照字段（自动采集，通关瞬间全量）
 
@@ -113,7 +124,8 @@
 |---|---|---|
 | milestones | Lv2/Lv3/Lv4 到达的 tick | **精确 tick**（升级事件当 tick 记录，无采样误差） |
 | chainBreaks | 每建筑实例**首次**断链的 tick + 建筑类型 + 缺料（红）/ 缺人（黄） | 事件级精确（每实例只记首次，见 3.3 局限） |
-| samples | 每 30 tick 一帧快照：资源 / 人口 / 繁荣度 | 采样间隔 30 tick（0.5 分钟），两帧之间的瞬时波动不可见 |
+| scarcity（v1.3 新增） | **逐帧**缺料/缺人标记（materialTicks/laborTicks 全量 tick 号）+ samples 窗口计数 | 帧级精确（每 tick 判定），M9 空转帧占比的数据源 |
+| samples | 每 30 tick 一帧快照：资源 / 人口 / 繁荣度（+ 窗口稀缺帧计数） | 采样间隔 30 tick（0.5 分钟），两帧之间的瞬时波动不可见 |
 | finalSnapshot | 通关（Lv4）瞬间的全量状态 | 精确（事件触发） |
 | speedChanges | 变速时刻（含暂停/1×/2× 切换的 tick 与目标档位） | 事件级精确 |
 | usedFastForward | 本局是否用过 2× | 布尔，由 speedChanges 派生 |
@@ -143,11 +155,11 @@
 
 玩家通关后从面板点「导出 JSON」，得到 `playtest-session-<时间戳>.json`，直接发回工作室（建议落 `production/playtests/`，或经主理人转交 design-strategist）。
 
-### 4.2 JSON schema（playtest-protocol@1.1）
+### 4.2 JSON schema（playtest-protocol@1.3）
 
 ```json
 {
-  "protocol": "playtest-protocol@1.1",
+  "protocol": "playtest-protocol@1.3",
   "gameBuild": "<commit hash>[-dirty]",  // 构建期由 vite.config.js 从 git 注入：git rev-parse --short HEAD
                                          // 工作区有未提交改动时追加 -dirty；git 不可用时为 "unknown"
   "gameBuildDirty": true,                // 可机读的 dirty 标记（true = 该 build 号不对应任何干净 commit）
@@ -156,21 +168,26 @@
   "playerProfile": "normal",        // skilled | normal | novice | null（面板未选）
   "paceVerdict": "too-fast",        // too-fast | ok | too-slow | null（面板未选）
   "notes": "",                       // 面板备注文本框
-  "milestones": {                   // 精确 tick；null=未发生
+  "milestones": {                   // 精确 tick；null=未发生；阈值口径 = RULES.unlockThresholds（现 20/60/145）
     "lv2": 300, "lv3": 780, "lv4": 1260
   },
   "chainBreaks": [                  // 每建筑实例首次断链
     { "tick": 120, "buildingType": "mill", "kind": "material" }  // kind: material(缺料红) | labor(缺人黄)
   ],
+  "scarcity": {                     // 【@1.3 新增，D-N2-4】逐帧稀缺标记（出现该稀缺的全部 tick 号）
+    "materialTicks": [36, 37],      // 存在缺料（红）建筑的 tick；空转帧 = 两数组并集之外的 tick
+    "laborTicks": [36]              // 存在缺人（黄）建筑的 tick；两数组可有交集（同 tick 双稀缺）
+  },
   "samples": [                      // 每 30 tick 一帧
     { "tick": 0,   "money": 240, "wood": 60, "grain": 20, "food": 20, "goods": 0,
-      "households": 0, "prosperity": 0.0 }
+      "households": 0, "prosperity": 0.0,
+      "scarcityMaterial": 0, "scarcityLabor": 0 }  // 【@1.3 新增】本采样窗口（30 tick）内缺料/缺人帧数
   ],
   "finalSnapshot": {                // 通关瞬间全量
     "tick": 1260, "money": 0, "taxIncome": 0.0, "commerceIncome": 0,
     "wood": 0, "grain": 0, "food": 0, "goods": 0,
     "households": 0, "housingCapacity": 0, "laborUsed": 0,
-    "prosperity": 100.0, "buildingCount": 0, "buildingBreakdown": {}
+    "prosperity": 145.0, "buildingCount": 0, "buildingBreakdown": {}
   },
   "speedChanges": [                 // 变速事件
     { "tick": 300, "to": 2 }
@@ -200,13 +217,14 @@ tick → 分钟：**1× 全程时 分钟 = tick / 60**；用过 2× 的局，tic
 
 ### 5.1 目标值对照表（普通玩家口径，来自设计案 5.4/8.6）
 
-| 里程碑 | 目标（普通玩家） | 目标 tick（1× 等效） | 偏离 30% 判定区间（分钟） | bot 实测参照 |
+| 里程碑 | 目标（普通玩家） | 目标 tick（1× 等效） | 偏离 30% 判定区间（分钟） | bot 实测参照（v1.3 口径） |
 |---|---|---|---|---|
-| Lv2 | 2~3 分钟（v1.2 下修，设计决策 D2 2026-10-17） | 120~180 | [1.4, 3.9]（下沿 120×0.7=84 tick；上沿 180×1.3=234 tick） | tick 11 ≈ 0.2 分钟 |
-| Lv3 | 13 分钟 | 780 | [9.1, 16.9] | tick 286 ≈ 4.8 分钟 |
-| Lv4 | 21 分钟 | 1260 | [14.7, 27.3] | tick 504 ≈ 8.4 分钟 |
+| Lv2 | 2~3 分钟（v1.2 下修，设计决策 D2 2026-10-17） | 120~180 | [1.4, 3.9]（下沿 120×0.7=84 tick；上沿 180×1.3=234 tick） | tick 12 ≈ 0.2 分钟 |
+| Lv3 | 13 分钟 | 780 | [9.1, 16.9] | tick 355 ≈ 5.9 分钟 |
+| Lv4 | 21 分钟 | 1260 | [14.7, 27.3] | tick 605 ≈ 10.1 分钟 |
 
-> 熟练玩家参照（不驱动调参，只圈区间）：2 / 7 / 13 分钟；bot（最优下限）0.2 / 4.8 / 8.4 分钟。
+> 熟练玩家参照（不驱动调参，只圈区间）：2 / 7 / 13 分钟。
+> **bot 参照口径（v1.3 升版）**：上表为 **2026-10-18 O6′ 基线、现行验收 bot**（12/355/605，V1 注入铜钱 211）。v1.2 及之前的 11/286/504 是 pre-D0 旧 bot 口径（高估真实通关下限 3.71 倍），仅作历史归档。**纪律重申（HANDOVER §5/B4）**：bot 是贪心启发式、非「最优玩家下限」，bot tick 只用于可达性验收参照，**不得用作节奏目标映射**；真人下限硬事实为 L\*_human=139（真人标定，不受 bot 更换影响）。
 
 ### 5.2 机械判定规则（按序执行，规则 0 优先于一切）
 
@@ -220,22 +238,23 @@ tick → 分钟：**1× 全程时 分钟 = tick / 60**；用过 2× 的局，tic
   - 其余情况 → 判「在容差内，不动数值」。
   - 单里程碑满足偏快/偏慢判定但不满足「至少 2 个」→ 判「局部偏快，观察」，附数据回传再议，不动杠杆。
 - **规则 4（杠杆选择，仅在判「整体偏快」时执行）**：**只动一个杠杆，首选提高解锁阈值**——
-  - 优先级 ①：Lv3 阈值 50→60 **或** Lv4 阈值 100→120（二选一，不同时动；对市税零干扰）；
-  - 选哪个的参考：若偏快集中在 Lv2→Lv3 段（M2 偏离最大）→ 动 Lv3；若集中在 Lv3→Lv4 段（M3 偏离最大）→ 动 Lv4；
-  - 优先级 ②（迁入间隔 5→8）与 ③（降食肆产出）**本轮禁用**（设计案 8.6 明确只动 ①）；
+  - **【v1.3 口径警示】本规则原预置数值（优先级 ①：Lv3 50→60 或 Lv4 100→120）为 pre-O6′ 历史口径**：50→60 已随 O6′ 落地（现阈值 20/60/145 + 恒计分封顶 26），100→120 已被 P-1′ 双 Gate 探针实测否决（Lv4 阈值存在验收 bot 可达性硬边界，且封顶后「贴线过」余量极小）。**后续任何杠杆的具体数值必须由设计侧从现行基线重新标定并过双 Gate 探针（V2 自然通关 + V1 注入铜钱），本协议不再预置数字**；
+  - 选哪个档位的参考逻辑不变：若偏快集中在 Lv2→Lv3 段（M2 偏离最大）→ 动 Lv3；若集中在 Lv3→Lv4 段（M3 偏离最大）→ 动 Lv4；
+  - 优先级 ②（迁入间隔 5→8）与 ③（降食肆产出）**维持禁用**（设计案 8.6；迁入 5→8 已经逐帧诊断证伪机制性收益，见 HANDOVER §6.1）；
   - 任何杠杆动后必须重跑 `npx vitest run --config vitest.verification.config.js` 确认 bot 仍自然通关 Lv4（HANDOVER 纪律 1）。
 - **规则 5（数据不足）**：普通组有效局 < 2，或画像无法归组 → 判「数据不足以判定」，建议加采（见 2.4 升级触发条件），本轮不动数值。
 
 ### 5.3 判定输出模板
 
 ```markdown
-## 节奏判定结论（依据 playtest-protocol@1.1）
+## 节奏判定结论（依据 playtest-protocol@1.3）
 - 有效局：__ 局（普通 __ / 熟练 __ / 新手 __ / 未选 __）
 - 普通组中位数：Lv2 __ tick（__ 分钟，目标 2~3）｜Lv3 __ tick（__ 分钟，目标 13）｜Lv4 __ tick（__ 分钟，目标 21）
 - 偏离度：Lv2 __% ｜ Lv3 __% ｜ Lv4 __%
 - 判定：整体偏快，触发调参 / 整体偏慢，回传再议 / 容差内，不动数值 / 局部偏快，观察 / 数据不足
-- M4 客观瓶颈推断：Lv1→2 ____ ｜ Lv2→3 ____ ｜ Lv3→4 ____（依据 samples/chainBreaks）
-- （若触发调参）建议杠杆：Lv3 50→60 或 Lv4 100→120（依据：__ 段偏离最大）；动后须过验收推演
+- M4 客观瓶颈推断：Lv1→2 ____ ｜ Lv2→3 ____ ｜ Lv3→4 ____（依据 samples/chainBreaks/scarcity）
+- M9 空转帧占比：__%（参考线 <40% 为探索目标，不作硬 Gate）
+- （若触发调参）建议杠杆：动 Lv3 或 Lv4 阈值，具体数值由设计侧从现行基线（20/60/145 + 封顶 26）重新标定并过双 Gate 探针（依据：__ 段偏离最大）；动后须过验收推演
 ```
 
 ---
@@ -257,14 +276,15 @@ tick → 分钟：**1× 全程时 分钟 = tick / 60**；用过 2× 的局，tic
 
 ---
 
-## 附：本协议与实现的核对记录（v1.1，防文档与实现脱节）
+## 附：本协议与实现的核对记录（v1.3，防文档与实现脱节）
 
 | 协议要素 | 事实来源 | 核对结果 |
 |---|---|---|
 | 存档 key `songtown-save-v1`、自动存档 30 tick | `src/config/rules.js:43` / `main.js` | ✓（v1.0 核对，v1.1 清档改走「重开新局」按钮） |
 | 1 tick = 1 秒、变速 0/1/2、切页 dt 钳 250ms | `rules.js` / `main.js` frame() | ✓ |
-| 阈值 20/50/100、初始 240/60/20/20/0 | `rules.js` | ✓ |
-| bot 参照 tick 11/286/504 | HANDOVER §5 | ✓ |
+| 阈值 20/60/145 + 恒计分封顶 26（O6′，v1.3 升版）、初始 240/60/20/20/0 | `rules.js` | ✓（里程碑阈值由 telemetry.js 从 `RULES.unlockThresholds` 派生，同源） |
+| bot 参照 tick 12/355/605（O6′ 基线，新 bot；旧口径 11/286/504 已归档） | HANDOVER §5 | ✓（v1.3 升版） |
+| scarcity.materialTicks/laborTicks、samples 窗口计数 scarcityMaterial/scarcityLabor（M9，D-N2-4） | **P-1′ 实施批次工程实现（telemetry.js，2026-10-18）** | ✓ 单测覆盖（tests/telemetry.test.js）；真实浏览器冒烟随下一轮真人试玩（B2）确认 |
 | 「重开新局」「试玩数据」按钮、通关自动弹面板、导出 JSON | **T-P6-02 工程实现（已交付）** | ✓ 浏览器冒烟通过（2026-10-17，证据见下）；两按钮功能验证；面板打开/导出正常 |
 | `gameBuild` / `gameBuildDirty` | **vite.config.js（define 注入）+ src/main.js + src/core/telemetry.js**（B3 修复，2026-10-17） | ✓ 构建指纹改由 git 实读（rev-parse + status --porcelain），dev 与 build 双通道注入；降级值 `unknown`（不可用一眼可辨）。浏览器实测导出 `gameBuild: "3338e97-dirty"` / `gameBuildDirty: true`（面板摘要同步显示「构建：3338e97-dirty（含未提交改动）」） |
 | milestones/chainBreaks/samples/finalSnapshot/speedChanges/usedFastForward | **T-P6-02 工程实现（已交付）** | ✓ 实际导出与文档 schema 完全一致（samples 为文档允许的超集，多出 housingCapacity/laborDemand/level/buildingCount/buildingBreakdown） |

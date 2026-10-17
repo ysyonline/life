@@ -152,9 +152,12 @@ function settlePopulation(state) {
 //          + Σ[民居基础分] × min(1, 在城户数 / 民居总容量)   // 容量为 0 时入住率按 0
 // 设计意图：繁荣度只奖励「活着的城市」——断链/闲置建筑不计分（P1）、空屋按入住率折算（P2），
 // 堵死「用铜钱直接购买繁荣度」的两个刷分口。农田/林场本就不会闲置、粮仓为被动建筑，维持恒计分。
+// P-1′（O6′）：恒计分三类合计封顶 RULES.prosperityPassiveCap.max，防铺原料建筑刷分。
 export function computeProsperity(state) {
   const c = RULES.prosperityCoef;
-  let working = 0; // 非民居（生产/存储/原料）：运转才计分
+  const capDef = RULES.prosperityPassiveCap; // P-1′（O6′）：恒计分封顶，单一真源在 rules.js
+  let working = 0; // 非民居非恒计分（工坊/商业）：运转才计分
+  let passive = 0; // 恒计分三类（farm/forest/granary）：合计封顶
   let housingScore = 0; // 民居（茅舍/瓦屋）基础分合计
   let housingCap = 0;
   for (const b of state.buildings) {
@@ -162,12 +165,15 @@ export function computeProsperity(state) {
     if (def.capacity > 0) {
       housingScore += def.score;
       housingCap += def.capacity;
+    } else if (capDef && capDef.buildings.includes(b.type)) {
+      passive += def.score * (b.idle ? c.idle : c.active);
     } else {
       working += def.score * (b.idle ? c.idle : c.active);
     }
   }
+  const passiveCapped = capDef ? Math.min(passive, capDef.max) : passive;
   const occupancy = housingCap > 0 ? Math.min(1, state.population.count / housingCap) : 0;
-  return working + housingScore * occupancy;
+  return working + passiveCapped + housingScore * occupancy;
 }
 
 export function computeLevel(prosperity) {

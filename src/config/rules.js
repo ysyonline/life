@@ -11,7 +11,10 @@ export const RULES = {
   // 繁荣度（P1：02-pacing-tuning.md）
   // idle=0：断链/闲置建筑不计繁荣度——堵死「铺闲置建筑刷分」口，繁荣度只奖励活着的城市
   prosperityCoef: { active: 1.0, idle: 0 },
-  unlockThresholds: [0, 20, 50, 100], // Lv1~Lv4
+  // 恒计分封顶（D-P1′ O6′）：farm/forest/granary 三类恒计分建筑的繁荣度**合计**封顶 26 分。
+  // 堵死「铺原料建筑刷分」主导策略（真人第 4 局 40 分白送占 Lv4 的 40%）。单一真源在此，公式不硬编码。
+  prosperityPassiveCap: { buildings: ['farm', 'forest', 'granary'], max: 26 },
+  unlockThresholds: [0, 20, 60, 145], // Lv1~Lv4（D-P1′ O6′：2026-10-17 拍板，Lv3 50→60、Lv4 100→145）
 
   // 人口
   minPopulation: 1, // 保底户数：迁出不得跌破此值，杜绝「人口 0 且食不足」的吸收态
