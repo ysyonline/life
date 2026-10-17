@@ -1,0 +1,16 @@
+# 工厂镇策略留档（T-P6-11b-2）
+# 来源：SEED_OFF=1003 PRINT_POLICY=1 node scratch/pacing-sim11.mjs 26,145（2026-10-17 复现）
+# sim11 读数：Lv2=6 / Lv3=106 / Lv4=226，终局 26 户/94 建筑，花钱 2465，等级回落 0
+# 终局构成：hut15 / farm22 / forest7 / mill22 / carpenter9 / eatery19（单一来源 eatery 37%）
+# 熟练×1.7=384 / 普通×2.4=542 —— 均低于 882 目标带，落带判定 ✗
+
+POLICY {"hutBuffer":3,"useHouse":false,"houseMoney":80,"forestCap":7,"hutGate":50,"spendFloor":60,"rules":[{"type":"carpenter","cap":4},{"type":"forest","cap":6},{"type":"eatery","cap":19},{"type":"hut","cap":999},{"type":"mill","cap":25},{"type":"grocer","cap":2},{"type":"house","cap":8},{"type":"carpenter","cap":9},{"type":"farm","cap":26}]}
+
+# 策略语义（makePolicyBot 解读）：
+#   - spendFloor=60：钱 <60 时什么都不建（攒钱）
+#   - forestCap=7：木材<10 且林场<7 时补林场
+#   - hutBuffer=3 / hutGate=50：空房 ≤3 且钱 >50 时建茅舍（不建瓦屋）
+#   - rules 顺序即建造优先级（每 tick 1 建，N=∞ 时可多建）：
+#     carpenter≤4 → forest≤6 → eatery≤19 → hut(无限) → mill≤25 → grocer≤2 → house≤8 → carpenter≤9 → farm≤26
+#   - eatery 门槛：食库存 >12；mill 门槛：mill ≤ farm；grocer 门槛：Lv4
+# 注意：sim11 的 playthrough 默认 N=Infinity（每 tick 可建多座），与验收 bot 的每 tick 1 建不同。
