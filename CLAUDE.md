@@ -14,7 +14,7 @@
 
 ## 读入纪律（省 token，也防用旧数当基线）
 
-- **默认只读** `docs/HANDOVER.md` 的 §0 当前状态 + §5 阻塞项 + §6 下一步。**不要整篇读 HANDOVER**（全文读一次约 2~4 万 token，其中 70% 是已归档历史）。
+- **默认只读** `docs/HANDOVER.md` 的 §0 当前状态 + §5 阻塞项 + §6 下一步。**不要整篇读 HANDOVER**（全文约 1.9 万字符 ≈ 8k token，其中一半是接手一周内用不到的细节；重组前是 6.5 万字符）。
 - 需要历史：先 `grep docs/log/arc-log.md`，再按命中的路径打开**那一份**文档。
 - **`docs/log/arc-log.md` 的「已废止读数」一节优先于任何旧文档**。旧文档里出现已废止读数时，以该节为准，不得直接引用。
 - 长文档（`quality/n2-experiment-gate.md` 724 行、`design/03-pacing-postmortem-round2.md`）**不许整篇读**，除非用户点名。
