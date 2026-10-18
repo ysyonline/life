@@ -1,0 +1,353 @@
+{
+  "protocol": "playtest-protocol@1.3",
+  "gameBuild": "5f77ecc-dirty",
+  "gameBuildDirty": true,
+  "exportedAt": "2026-10-18T02:40:57.972Z",
+  "playerProfile": "novice",
+  "paceVerdict": "ok",
+  "notes": "",
+  "milestones": {
+    "lv2": 95,
+    "lv3": 264,
+    "lv4": 370
+  },
+  "chainBreaks": [
+    {
+      "tick": 333,
+      "buildingType": "mill",
+      "kind": "material"
+    },
+    {
+      "tick": 334,
+      "buildingType": "mill",
+      "kind": "material"
+    }
+  ],
+  "scarcity": {
+    "materialTicks": [
+      333,
+      334,
+      335,
+      336,
+      337,
+      338,
+      339,
+      340,
+      341,
+      342,
+      343,
+      344,
+      345,
+      346,
+      347,
+      348
+    ],
+    "laborTicks": []
+  },
+  "samples": [
+    {
+      "tick": 30,
+      "money": 162.5,
+      "wood": 10,
+      "grain": 90,
+      "food": 27,
+      "goods": 0,
+      "households": 4,
+      "housingCapacity": 4,
+      "laborDemand": 0,
+      "prosperity": 8,
+      "level": 1,
+      "buildingCount": 5,
+      "buildingBreakdown": {
+        "hut": 2,
+        "farm": 3
+      },
+      "scarcityMaterial": 0,
+      "scarcityLabor": 0
+    },
+    {
+      "tick": 60,
+      "money": 145.49999999999966,
+      "wood": 4,
+      "grain": 100,
+      "food": 15.000000000000037,
+      "goods": 0,
+      "households": 4,
+      "housingCapacity": 4,
+      "laborDemand": 0,
+      "prosperity": 10,
+      "level": 1,
+      "buildingCount": 6,
+      "buildingBreakdown": {
+        "hut": 2,
+        "farm": 3,
+        "forest": 1
+      },
+      "scarcityMaterial": 0,
+      "scarcityLabor": 0
+    },
+    {
+      "tick": 90,
+      "money": 56.74999999999952,
+      "wood": 7,
+      "grain": 98,
+      "food": 17.50000000000003,
+      "goods": 0,
+      "households": 6,
+      "housingCapacity": 14,
+      "laborDemand": 1,
+      "prosperity": 17,
+      "level": 1,
+      "buildingCount": 13,
+      "buildingBreakdown": {
+        "hut": 7,
+        "farm": 3,
+        "forest": 2,
+        "mill": 1
+      },
+      "scarcityMaterial": 0,
+      "scarcityLabor": 0
+    },
+    {
+      "tick": 120,
+      "money": 39.4999999999995,
+      "wood": 110,
+      "grain": 98,
+      "food": 22.00000000000002,
+      "goods": 0,
+      "households": 12,
+      "housingCapacity": 14,
+      "laborDemand": 1,
+      "prosperity": 24,
+      "level": 2,
+      "buildingCount": 15,
+      "buildingBreakdown": {
+        "hut": 7,
+        "farm": 3,
+        "forest": 4,
+        "mill": 1
+      },
+      "scarcityMaterial": 0,
+      "scarcityLabor": 0
+    },
+    {
+      "tick": 150,
+      "money": 19.7499999999995,
+      "wood": 205,
+      "grain": 96,
+      "food": 36.50000000000005,
+      "goods": 0,
+      "households": 15,
+      "housingCapacity": 16,
+      "laborDemand": 2,
+      "prosperity": 29.5,
+      "level": 2,
+      "buildingCount": 17,
+      "buildingBreakdown": {
+        "hut": 8,
+        "farm": 3,
+        "forest": 4,
+        "mill": 2
+      },
+      "scarcityMaterial": 0,
+      "scarcityLabor": 0
+    },
+    {
+      "tick": 180,
+      "money": 15.999999999999506,
+      "wood": 310,
+      "grain": 96,
+      "food": 44.00000000000005,
+      "goods": 0,
+      "households": 21,
+      "housingCapacity": 22,
+      "laborDemand": 2,
+      "prosperity": 32.5,
+      "level": 2,
+      "buildingCount": 20,
+      "buildingBreakdown": {
+        "hut": 11,
+        "farm": 3,
+        "forest": 4,
+        "mill": 2
+      },
+      "scarcityMaterial": 0,
+      "scarcityLabor": 0
+    },
+    {
+      "tick": 210,
+      "money": 48.749999999999545,
+      "wood": 430,
+      "grain": 96,
+      "food": 38.49999999999997,
+      "goods": 0,
+      "households": 22,
+      "housingCapacity": 22,
+      "laborDemand": 2,
+      "prosperity": 33,
+      "level": 2,
+      "buildingCount": 20,
+      "buildingBreakdown": {
+        "hut": 11,
+        "farm": 3,
+        "forest": 4,
+        "mill": 2
+      },
+      "scarcityMaterial": 0,
+      "scarcityLabor": 0
+    },
+    {
+      "tick": 240,
+      "money": 39.74999999999958,
+      "wood": 480,
+      "grain": 82,
+      "food": 24.499999999999957,
+      "goods": 0,
+      "households": 23,
+      "housingCapacity": 24,
+      "laborDemand": 5,
+      "prosperity": 46.5,
+      "level": 2,
+      "buildingCount": 24,
+      "buildingBreakdown": {
+        "hut": 12,
+        "farm": 3,
+        "forest": 4,
+        "mill": 4,
+        "eatery": 1
+      },
+      "scarcityMaterial": 0,
+      "scarcityLabor": 0
+    },
+    {
+      "tick": 270,
+      "money": 65.24999999999955,
+      "wood": 500,
+      "grain": 44,
+      "food": 34.499999999999936,
+      "goods": 0,
+      "households": 26,
+      "housingCapacity": 26,
+      "laborDemand": 7,
+      "prosperity": 67,
+      "level": 3,
+      "buildingCount": 32,
+      "buildingBreakdown": {
+        "hut": 13,
+        "farm": 8,
+        "forest": 4,
+        "mill": 5,
+        "eatery": 2
+      },
+      "scarcityMaterial": 0,
+      "scarcityLabor": 0
+    },
+    {
+      "tick": 300,
+      "money": 54.999999999999545,
+      "wood": 445,
+      "grain": 130,
+      "food": 42.99999999999993,
+      "goods": 0,
+      "households": 32,
+      "housingCapacity": 34,
+      "laborDemand": 12,
+      "prosperity": 94.88235294117646,
+      "level": 3,
+      "buildingCount": 40,
+      "buildingBreakdown": {
+        "hut": 13,
+        "farm": 8,
+        "forest": 4,
+        "mill": 9,
+        "eatery": 3,
+        "house": 2,
+        "granary": 1
+      },
+      "scarcityMaterial": 0,
+      "scarcityLabor": 0
+    },
+    {
+      "tick": 330,
+      "money": 257.2499999999995,
+      "wood": 382,
+      "grain": 10,
+      "food": 98.49999999999982,
+      "goods": 14,
+      "households": 34,
+      "housingCapacity": 34,
+      "laborDemand": 20,
+      "prosperity": 123,
+      "level": 3,
+      "buildingCount": 47,
+      "buildingBreakdown": {
+        "hut": 13,
+        "farm": 8,
+        "forest": 4,
+        "mill": 10,
+        "eatery": 6,
+        "house": 2,
+        "granary": 2,
+        "carpenter": 2
+      },
+      "scarcityMaterial": 0,
+      "scarcityLabor": 0
+    },
+    {
+      "tick": 360,
+      "money": 688.9999999999998,
+      "wood": 257,
+      "grain": 48,
+      "food": 59.99999999999981,
+      "goods": 74,
+      "households": 40,
+      "housingCapacity": 42,
+      "laborDemand": 21,
+      "prosperity": 132.8095238095238,
+      "level": 3,
+      "buildingCount": 56,
+      "buildingBreakdown": {
+        "hut": 13,
+        "farm": 14,
+        "forest": 4,
+        "mill": 10,
+        "eatery": 7,
+        "house": 4,
+        "granary": 2,
+        "carpenter": 2
+      },
+      "scarcityMaterial": 16,
+      "scarcityLabor": 0
+    }
+  ],
+  "finalSnapshot": {
+    "tick": 370,
+    "money": 829.2499999999995,
+    "wood": 197,
+    "grain": 112,
+    "food": 57.49999999999982,
+    "goods": 94,
+    "households": 42,
+    "housingCapacity": 42,
+    "laborDemand": 24,
+    "prosperity": 146,
+    "level": 4,
+    "buildingCount": 59,
+    "buildingBreakdown": {
+      "hut": 13,
+      "farm": 14,
+      "forest": 4,
+      "mill": 13,
+      "eatery": 7,
+      "house": 4,
+      "granary": 2,
+      "carpenter": 2
+    },
+    "scarcityMaterial": 0,
+    "scarcityLabor": 0,
+    "taxIncome": 2.1,
+    "commerceIncome": 21
+  },
+  "speedChanges": [],
+  "usedFastForward": false
+}
