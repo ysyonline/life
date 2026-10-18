@@ -268,6 +268,10 @@ describe('辅助谓词与文案', () => {
     expect(hintText('t1', state)).toContain('建好就计分');
     expect(hintText('t1', state)).toContain('封顶 26');
     expect(hintText('t1', state)).toContain('农田 → 磨坊');
+    // A4 复测甲（D-甲）：T1 必须含「钱不够」恢复路径（攒市税 / 拆建返还五成）——
+    // B 案例（触发时 8 钱 vs 食肆 50 钱）证明无恢复路径的处方不可执行
+    expect(hintText('t1', state)).toContain('攒市税');
+    expect(hintText('t1', state)).toContain('返还五成');
     expect(hintText('t0', state)).toContain('农田');
     expect(hintText('nope', state)).toBe('');
   });
