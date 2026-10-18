@@ -15,3 +15,8 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# 工具产物
+.playwright-cli/
+.smoke/
+.workbuddy/
