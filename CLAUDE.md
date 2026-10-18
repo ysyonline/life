@@ -24,7 +24,7 @@
 
 ```bash
 npm run dev            # 试玩 → http://localhost:5173（⚠ 试玩前必须重启，见协议 v1.5 §2.1 硬前置）
-npm run test           # 开发自测，当前 133/133（默认排除 tests/verification/）
+npm run test           # 开发自测，当前 142/142（默认排除 tests/verification/）
 npx vitest run --config vitest.verification.config.js   # 独立验收，当前 33/33
 ```
 
@@ -50,5 +50,5 @@ npx vitest run --config vitest.verification.config.js   # 独立验收，当前 
 
 ## 当前焦点
 
-UX-3 新手引导已实施（`cb4d22d`），R1 误伤熟练玩家 PASS；**A4 主判据判定 FAIL**（2 位新玩家首局徘徊 281 / 358 tick），四条设计侧修订建议**待用户拍板**。
+UX-3 引导链路已验收通过（D-甲，A4 议题关闭）。**c 已拍板变形立项（甲+乙），实施方案 `docs/design/12-c-hud-enhancement-plan.md` 待评审（P-c4~c8），评审通过才动代码**；**P2 美术 D 谱系 `docs/design/10-p2-art-d-substyles.md` 待拍板**（推荐 D1 立体书 × D2 剪纸主从融合 + 32×32 缩样终验，用户先看样张再定）。
 现行基线：新 bot @ O6′ → V2 `12/355/605`、V1 `211`，**余量仅 1.0 / 0.74 分，贴线型基准**，任何削分或抬阈值都极易翻红。
