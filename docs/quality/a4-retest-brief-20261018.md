@@ -7,7 +7,7 @@
 ## 0. 环境（已就绪，无需再操作）
 
 - 服务：`http://localhost:5173`（本次新起的 dev server，旧进程已杀，防 B3′ 指纹滞后）
-- `gameBuild` = **`4dffdb2-dirty`**。`dirty` 仅因 `scratch/factory-town-replay.mjs` 未跟踪，**代码版本 = `4dffdb2`，与当前 HEAD 一致**，无未提交改动。
+- `gameBuild` = **`4002c42-dirty`**，对应 HEAD `4002c42`。`dirty` 仅因 `scratch/factory-town-replay.mjs` 一个**未跟踪的调试脚本**，`src/`、`tests/` 无任何未提交改动 ⇒ **代码版本就是 `4002c42`**，导出 JSON 里的 `gameBuildDirty: true` 不影响判定。
 - 单人单局约 5~8 分钟。两位玩家**不要同时玩同一台机器**（会串数据）。
 
 ## 1. 每位玩家的流程（4 步，顺序不能错）
