@@ -7,6 +7,9 @@ import { tick } from '../src/core/simulation.js';
 import {
   evaluateHints,
   isStagnant,
+  isSlowGrowth,
+  historyCapacity,
+  pushProsperity,
   eateryCount,
   vacantCapacity,
   hintText,
@@ -28,6 +31,13 @@ function flatHistory(len, val = 20) {
 
 const W = UI_HINTS.stagnationWindow;
 const D = UI_HINTS.stagnationDelta;
+const GW = UI_HINTS.growthWindow;
+const G = UI_HINTS.growthDelta;
+
+// 按「每 tick 固定增量」构造窗口历史：totalDelta 为 GW tick 窗口内的总增量
+function rampHistory(len, start, perTick) {
+  return Array.from({ length: len }, (_, i) => start + i * perTick);
+}
 
 describe('isStagnant 停滞窗口判定', () => {
   it('采样不足 window+1 时不判停滞（避免开局误触发）', () => {
@@ -52,6 +62,58 @@ describe('isStagnant 停滞窗口判定', () => {
     const hist = [0, ...flatHistory(W, 30), 30.5]; // 很早有一次从 0 跳 30 的上升，最近 W tick 内 Δ=0.5
     expect(hist.length).toBe(W + 2);
     expect(isStagnant(hist)).toBe(true);
+  });
+});
+
+describe('isSlowGrowth 增速不足判定（A4 修订 b）', () => {
+  it('采样不足 window+1 时不判增速不足', () => {
+    expect(isSlowGrowth([])).toBe(false);
+    expect(isSlowGrowth(rampHistory(GW, 20, 0.1))).toBe(false); // 恰好 GW 个采样
+  });
+
+  it('窗口 Δ 低于 growthDelta 判增速不足（P4 缓慢爬升型 6/60tick）', () => {
+    const hist = rampHistory(GW + 1, 20, 0.1); // 60 tick Δ = 6.0 < 10
+    expect(isSlowGrowth(hist)).toBe(true);
+    expect(isStagnant(hist)).toBe(false); // 停滞口径抓不到——这正是 A4 的盲区
+  });
+
+  it('窗口 Δ 达到 growthDelta 不判增速不足（快玩家边界）', () => {
+    // Δ 恰好 = 阈值（不 < 阈值）→ 不触发。用整数构造，避开浮点累加的边界抖动
+    const exact = flatHistory(GW + 1, 20);
+    exact[exact.length - 1] = 20 + G;
+    expect(isSlowGrowth(exact)).toBe(false);
+    // 12/60tick 是 11 局回放中「快玩家」的最小窗口 Δ（12.2 量级），必须不触发
+    const fast = flatHistory(GW + 1, 20);
+    fast[fast.length - 1] = 32;
+    expect(isSlowGrowth(fast)).toBe(false);
+  });
+
+  it('静止与下坡都算增速不足', () => {
+    expect(isSlowGrowth(flatHistory(GW + 1, 25))).toBe(true);
+    expect(isSlowGrowth(rampHistory(GW + 1, 40, -0.2))).toBe(true); // 断粮回落
+  });
+});
+
+describe('环形缓冲容量（防「增速判定静默永不触发」）', () => {
+  it('容量取两个窗口的较大者 +1', () => {
+    expect(historyCapacity()).toBe(Math.max(W, GW) + 1);
+    expect(historyCapacity({ stagnationWindow: 10, growthWindow: 30 })).toBe(31);
+    expect(historyCapacity({ stagnationWindow: 30, growthWindow: 10 })).toBe(31);
+  });
+
+  it('pushProsperity 按容量裁剪，且裁剪后仍够两个窗口判定', () => {
+    const buf = [];
+    for (let i = 0; i < 500; i++) pushProsperity(buf, i);
+    expect(buf.length).toBe(historyCapacity());
+    expect(buf.length).toBeGreaterThanOrEqual(Math.max(W, GW) + 1); // 采样足够，不会静默失效
+    expect(buf[buf.length - 1]).toBe(499); // 保留最新值
+  });
+
+  it('增长窗口大于停滞窗口时，缓冲必须按较大者裁剪', () => {
+    const opts = { stagnationWindow: 10, growthWindow: 40 };
+    const buf = [];
+    for (let i = 0; i < 100; i++) pushProsperity(buf, i, opts);
+    expect(buf.length).toBe(41);
   });
 });
 
@@ -92,12 +154,42 @@ describe('evaluateHints 触发条件', () => {
     expect(evaluateHints(state, { prosperityHistory: hist })).toEqual([]);
   });
 
-  it('T1：繁荣度持续在动（熟练玩家）不触发——与窗口长度无关', () => {
+  it('T1：快玩家（12/60tick）不触发——增速口径的上边界保护', () => {
     state.level = 2;
     state.maxLevel = 2;
-    // 每 tick 上升 0.2（远小于停滞阈值但非停滞？—— 0.2×W 远超 1.0，故不停滞）
+    // 每 tick +0.2 → 60 tick Δ=12：停滞为假，且 12 > growthDelta(10) 故增速不足也为假
+    // 该输入对应 11 局回放中「快玩家」的最小窗口 Δ（12.2 量级），是误伤保护的关键边界，勿放宽阈值到 ≥12
     const hist = Array.from({ length: W + 1 }, (_, i) => 25 + i * 0.2);
     expect(isStagnant(hist)).toBe(false);
+    expect(isSlowGrowth(hist)).toBe(false);
+    expect(evaluateHints(state, { prosperityHistory: hist })).toEqual([]);
+  });
+
+  it('T1：慢爬玩家（6/60tick）触发——A4 修订 b 的核心场景', () => {
+    state.level = 2;
+    state.maxLevel = 2;
+    // P4 实测量级：繁荣度 24→40 以 6~8/60tick 爬升，停滞口径在结构上永远抓不到（A4 报告 §3.1）
+    const hist = Array.from({ length: W + 1 }, (_, i) => 24 + i * 0.1);
+    expect(isStagnant(hist)).toBe(false);
+    expect(isSlowGrowth(hist)).toBe(true);
+    expect(evaluateHints(state, { prosperityHistory: hist })).toEqual(['t1']);
+  });
+
+  it('T2 不受增速口径影响（只走停滞）—— 防误弹护城河', () => {
+    state.level = 2;
+    state.maxLevel = 2;
+    // 先建 1 座食肆隔离 T1（否则 T1 会因无食肆而触发）
+    const e = findSpot(state, null, 1, 1);
+    placeBuilding(state, 'eatery', e.x, e.y);
+    for (let i = 0; i < 4; i++) {
+      const s = findSpot(state, null, 1, 1);
+      placeBuilding(state, 'hut', s.x, s.y);
+    }
+    expect(vacantCapacity(state)).toBe(8);
+    // 慢爬但未停滞：Δ=6 < growthDelta，但 > stagnationDelta
+    const hist = Array.from({ length: W + 1 }, (_, i) => 24 + i * 0.1);
+    expect(isSlowGrowth(hist)).toBe(true);
+    // T2 若被增速口径连带触发，新手正常建房期会被反复打扰——本用例钉死该边界
     expect(evaluateHints(state, { prosperityHistory: hist })).toEqual([]);
   });
 
@@ -172,6 +264,10 @@ describe('辅助谓词与文案', () => {
     state.population.count = 1;
     expect(hintText('t2', state)).toContain('户数 1/容量 2'); // 户数 1 / 容量 2
     expect(hintText('t1', state)).toContain('食肆');
+    // A4 修订 a：T1 必须点明「恒计分 vs 运转计分」区分（回应 P5「没粮也涨分」困惑）
+    expect(hintText('t1', state)).toContain('建好就计分');
+    expect(hintText('t1', state)).toContain('封顶 26');
+    expect(hintText('t1', state)).toContain('农田 → 磨坊');
     expect(hintText('t0', state)).toContain('农田');
     expect(hintText('nope', state)).toBe('');
   });

@@ -22,8 +22,7 @@ import { createBuildMenu } from './ui/buildMenu.js';
 import { createInfoPanel } from './ui/infoPanel.js';
 import { createTelemetryPanel } from './ui/telemetryPanel.js';
 import { createHintBar } from './ui/hintBar.js';
-import { evaluateHints, HINT_ORDER } from './core/hints.js';
-import { UI_HINTS } from './config/uiHints.js';
+import { evaluateHints, HINT_ORDER, pushProsperity } from './core/hints.js';
 
 // 构建标识：试玩数据导出契约的 gameBuild 字段。
 // 由 vite.config.js 在构建期用 git（rev-parse + status --porcelain）注入，dev 与 build 均生效。
@@ -299,9 +298,10 @@ function afterTick() {
   // 采集：每 tick 只读观察（milestones / chainBreaks / samples / finalSnapshot）
   collectTelemetry(state);
 
-  // UX-3：繁荣度环形缓冲（用于停滞窗口判定）
-  prosperityHistory.push(state.prosperity);
-  if (prosperityHistory.length > UI_HINTS.stagnationWindow + 1) prosperityHistory.shift();
+  // UX-3：繁荣度环形缓冲（用于停滞 / 增速不足双口径判定）
+  // 裁剪上限由 historyCapacity 统一派生（max(stagnationWindow, growthWindow) + 1），
+  // 勿在此硬编码窗口长度——否则新增窗口大于旧窗口时增速判定会静默永不触发。
+  pushProsperity(prosperityHistory, state.prosperity);
 
   // UX-3：驱动提示条
   const active = evaluateHints(state, { prosperityHistory });
