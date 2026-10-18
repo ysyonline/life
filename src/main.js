@@ -10,6 +10,7 @@ import { hasSave, loadGame, saveGame, clearSave } from './core/save.js';
 import {
   collect as collectTelemetry,
   recordSpeedChange,
+  recordHint,
   reset as resetTelemetry,
   serialize as serializeTelemetry,
   restore as restoreTelemetry,
@@ -20,6 +21,9 @@ import { createHud } from './ui/hud.js';
 import { createBuildMenu } from './ui/buildMenu.js';
 import { createInfoPanel } from './ui/infoPanel.js';
 import { createTelemetryPanel } from './ui/telemetryPanel.js';
+import { createHintBar } from './ui/hintBar.js';
+import { evaluateHints, HINT_ORDER } from './core/hints.js';
+import { UI_HINTS } from './config/uiHints.js';
 
 // 构建标识：试玩数据导出契约的 gameBuild 字段。
 // 由 vite.config.js 在构建期用 git（rev-parse + status --porcelain）注入，dev 与 build 均生效。
@@ -189,6 +193,19 @@ const telemetryPanel = createTelemetryPanel(uiRoot, {
   gameBuildDirty: GAME_BUILD_DIRTY,
 });
 
+// UX-3：繁荣度环形缓冲（评估停滞窗口）+ 提示一次性/消解状态（存内存，不进存档，07 草案 R4）
+const prosperityHistory = [];
+const hintConsumed = new Set(); // 已展示（shown）过的提示 id，本局不再复发
+let activeHintId = null; // 当前正在展示的提示 id（条件持续满足时不重复 shown）
+
+// UX-3 提示条：HUD 下方非模态横幅。
+const hintBar = createHintBar(uiRoot, {
+  onDismiss: (id) => {
+    activeHintId = null; // 玩家手动关闭：不随后记录「resolved」
+    recordHint(id, 'dismissed', state.tick);
+  },
+});
+
 const buildMenu = createBuildMenu(uiRoot, {
   onSelect: (type) => {
     state.ui.placingType = state.ui.placingType === type ? null : type;
@@ -281,6 +298,27 @@ let lastAutosaveTick = state.tick;
 function afterTick() {
   // 采集：每 tick 只读观察（milestones / chainBreaks / samples / finalSnapshot）
   collectTelemetry(state);
+
+  // UX-3：繁荣度环形缓冲（用于停滞窗口判定）
+  prosperityHistory.push(state.prosperity);
+  if (prosperityHistory.length > UI_HINTS.stagnationWindow + 1) prosperityHistory.shift();
+
+  // UX-3：驱动提示条
+  const active = evaluateHints(state, { prosperityHistory });
+  // 当前正在展示的提示若条件已不满足 → 记录消解并隐藏（玩家手动关闭的 dismissed 不在此列）
+  if (activeHintId != null && !active.includes(activeHintId)) {
+    recordHint(activeHintId, 'resolved', state.tick);
+    activeHintId = null;
+    hintBar.hide();
+  }
+  // 取优先级最高的未消费且当前满足条件的提示 → 展示（每局每 id 至多一次）
+  const candidate = HINT_ORDER.find((id) => active.includes(id) && !hintConsumed.has(id));
+  if (candidate && candidate !== activeHintId) {
+    hintConsumed.add(candidate);
+    activeHintId = candidate;
+    hintBar.show(candidate, state);
+    recordHint(candidate, 'shown', state.tick);
+  }
 
   if (state.maxLevel > prevMaxLevel) {
     const names = Object.values(BUILDINGS)

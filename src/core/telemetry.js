@@ -31,6 +31,7 @@ const data = {
   samples: [], // { tick, money, wood, grain, food, goods, households, housingCapacity, laborDemand, prosperity, level, buildingCount, buildingBreakdown }
   finalSnapshot: null, // Lv4 到达瞬间全量快照（同 samples 字段 + taxIncome / commerceIncome）
   speedChanges: [], // { tick, to }
+  hints: [], // UX-3：提示事件 { tick, id, action: shown/dismissed/resolved }（additive 超集字段，先例：samples）
 };
 
 // 已记录过首次 idle 的建筑实例 id 集合（保证「同一建筑只记第一次」）
@@ -144,6 +145,12 @@ function recordSpeedChange(to, tick) {
   data.speedChanges.push({ tick: tick ?? null, to });
 }
 
+// ---------- UX-3 提示事件（由装配层在提示 shown / dismissed / resolved 时调用） ----------
+// action：shown（首次展示）/ dismissed（玩家手动 ✕ 关闭）/ resolved（条件消失自动消解）。
+function recordHint(id, action, tick) {
+  data.hints.push({ tick: tick ?? null, id, action });
+}
+
 // ---------- 统一入口：main.js afterTick 每 tick 调用 ----------
 // derived 可选：{ housingCapacity, laborDemand }（main.js 可复用 HUD 已算的值；缺省时本模块自算）
 function collect(state, derived) {
@@ -174,6 +181,7 @@ export function getTelemetryData() {
       ? { ...data.finalSnapshot, buildingBreakdown: { ...data.finalSnapshot.buildingBreakdown } }
       : null,
     speedChanges: data.speedChanges.map((c) => ({ ...c })),
+    hints: data.hints.map((h) => ({ ...h })),
     usedFastForward: usedFastForwardOf(),
   };
 }
@@ -188,6 +196,7 @@ export function reset() {
   data.samples = [];
   data.finalSnapshot = null;
   data.speedChanges = [];
+  data.hints = [];
   recordedBreakIds.clear();
 }
 
@@ -201,6 +210,7 @@ export function serialize() {
     samples: data.samples.map((s) => ({ ...s })),
     finalSnapshot: data.finalSnapshot ? { ...data.finalSnapshot } : null,
     speedChanges: data.speedChanges.map((c) => ({ ...c })),
+    hints: data.hints.map((h) => ({ ...h })),
     recordedBreakIds: [...recordedBreakIds],
   };
 }
@@ -208,7 +218,7 @@ export function serialize() {
 // 从持久化数据恢复（中途刷新后继续采集）。数据非法时返回 false 并保持现状（不半恢复）。
 export function restore(saved) {
   if (!saved || typeof saved !== 'object') return false;
-  const { milestones, chainBreaks, scarcity, samples, finalSnapshot, speedChanges, recordedBreakIds: savedIds } = saved;
+  const { milestones, chainBreaks, scarcity, samples, finalSnapshot, speedChanges, hints, recordedBreakIds: savedIds } = saved;
   if (
     !milestones ||
     typeof milestones.lv2 !== 'number' && milestones.lv2 !== null ||
@@ -247,6 +257,7 @@ export function restore(saved) {
   data.samples = samples.map((s) => ({ ...s }));
   data.finalSnapshot = finalSnapshot ? { ...finalSnapshot } : null;
   data.speedChanges = speedChanges.map((c) => ({ ...c }));
+  data.hints = Array.isArray(hints) ? hints.map((h) => ({ ...h })) : [];
   recordedBreakIds.clear();
   for (const id of savedIds) recordedBreakIds.add(id);
   return true;
@@ -279,6 +290,7 @@ export function buildExportPayload({
     samples: d.samples,
     finalSnapshot: d.finalSnapshot,
     speedChanges: d.speedChanges,
+    hints: d.hints,
     usedFastForward: d.usedFastForward,
   };
 }
@@ -309,4 +321,4 @@ export function buildingName(type) {
   return BUILDINGS[type]?.name ?? type;
 }
 
-export { collect, recordSpeedChange, SAMPLE_INTERVAL };
+export { collect, recordSpeedChange, recordHint, SAMPLE_INTERVAL };

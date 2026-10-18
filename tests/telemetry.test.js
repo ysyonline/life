@@ -7,6 +7,7 @@ import { placeBuilding } from '../src/core/grid.js';
 import {
   collect,
   recordSpeedChange,
+  recordHint,
   getTelemetryData,
   reset,
   restore,
@@ -256,6 +257,50 @@ describe('逐帧稀缺标记（D-N2-4）', () => {
   });
 });
 
+describe('UX-3 提示事件（hints）', () => {
+  it('recordHint 记录 { tick, id, action }，getTelemetryData 深拷贝', () => {
+    recordHint('t1', 'shown', 100);
+    recordHint('t1', 'resolved', 130);
+    recordHint('t2', 'dismissed', 140);
+    const d = getTelemetryData();
+    expect(d.hints).toEqual([
+      { tick: 100, id: 't1', action: 'shown' },
+      { tick: 130, id: 't1', action: 'resolved' },
+      { tick: 140, id: 't2', action: 'dismissed' },
+    ]);
+    // 深拷贝：改外部结果不影响内部
+    d.hints[0].tick = 999;
+    expect(getTelemetryData().hints[0].tick).toBe(100);
+  });
+
+  it('hints 进入导出契约（additive 超集字段）', () => {
+    recordHint('t0', 'shown', 20);
+    const payload = buildExportPayload({ gameBuild: 'x', exportedAt: 'y' });
+    expect(payload.hints).toEqual([{ tick: 20, id: 't0', action: 'shown' }]);
+  });
+
+  it('serialize → restore 往返保留 hints；旧档缺失 hints 字段可恢复（缺省空数组）', () => {
+    recordHint('t1', 'shown', 50);
+    const saved = serialize();
+    reset();
+    expect(restore(JSON.parse(JSON.stringify(saved)))).toBe(true);
+    expect(getTelemetryData().hints).toEqual([{ tick: 50, id: 't1', action: 'shown' }]);
+
+    // 旧档（无 hints 字段）：剔除后仍可恢复，缺省空数组（07 草案 C-6）
+    reset();
+    const legacy = JSON.parse(JSON.stringify(saved));
+    delete legacy.hints;
+    expect(restore(legacy)).toBe(true);
+    expect(getTelemetryData().hints).toEqual([]);
+  });
+
+  it('reset 清空 hints', () => {
+    recordHint('t1', 'shown', 1);
+    reset();
+    expect(getTelemetryData().hints).toEqual([]);
+  });
+});
+
 describe('reset', () => {
   it('清空全部采集数据', () => {
     state.prosperity = 20;
@@ -304,7 +349,7 @@ describe('导出契约（playtest-protocol@1.3 §4.2：扁平结构）', () => {
     expect(Object.keys(payload)).toEqual([
       'protocol', 'gameBuild', 'gameBuildDirty', 'exportedAt', 'playerProfile', 'paceVerdict',
       'notes', 'milestones', 'chainBreaks', 'scarcity', 'samples', 'finalSnapshot', 'speedChanges',
-      'usedFastForward',
+      'hints', 'usedFastForward',
     ]);
     expect(payload.protocol).toBe('playtest-protocol@1.3');
     expect(payload.gameBuild).toBe('3338e97-dirty');

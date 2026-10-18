@@ -266,6 +266,46 @@ html, body {
   border-color: #ffb300;
 }
 
+/* UX-3：提示条（hint bar）——HUD 下方非模态横幅，琥珀色，不遮挡画布 */
+#hint-bar {
+  position: absolute;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(640px, calc(100vw - 24px));
+  padding: 7px 14px;
+  background: rgba(46, 34, 12, 0.92);
+  border: 1px solid #ffb300;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #ffe082;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  user-select: none;
+}
+
+#hint-bar .text {
+  white-space: normal;
+  line-height: 1.4;
+}
+
+#hint-bar .dismiss {
+  flex: 0 0 auto;
+  background: transparent;
+  color: #ffb300;
+  border: none;
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 4px;
+  cursor: pointer;
+}
+
+#hint-bar .dismiss:hover {
+  color: #fff;
+}
+
 /* 提示浮层 */
 #toast {
   position: absolute;
