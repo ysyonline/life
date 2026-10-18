@@ -38,7 +38,7 @@
 cd d:/code/life
 npm install        # 首次
 npm run dev        # 开发试玩 → http://localhost:5173（⚠ 试玩前必重启，见 §5.3）
-npm run test       # 开发自测，当前 133/133（默认排除 tests/verification/）
+npm run test       # 开发自测，当前 142/142（默认排除 tests/verification/）
 npm run build      # 构建 → dist/（纯静态，任意托管即玩）
 
 # 独立验收套件（与开发自测分离，专用配置）
@@ -161,7 +161,7 @@ D2 原参数（封顶24+150）、迁入间隔 5→8、D-N2-6（T1 温和档，�
 | 配置（数值单一来源，冻结令覆盖） | `src/config/`（`rules.js` / `buildings.js` / `resources.js` / `uiHints.js`） |
 | 模拟层（纯逻辑可单测） | `src/core/`（state / grid / simulation / save / telemetry / hints） |
 | 渲染层（只读 state） / UI 层 | `src/render/`、`src/ui/` + `src/main.js` |
-| 开发自测 / 独立验收 | `tests/`（133 用例）、`tests/verification/`（33 用例） |
+| 开发自测 / 独立验收 | `tests/`（142 用例）、`tests/verification/`（33 用例） |
 | **历史弧线 / 已废止读数 / 提交索引** | **`docs/log/arc-log.md`** |
 
 ## 附录A 已知非阻断问题
