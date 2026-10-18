@@ -233,7 +233,9 @@ node scratch/factory-town-replay2.mjs                         # 工厂镇独立�
 - **`c5aaac3`（2026-10-18 11:30）**「docs: UX-3 新手引导设计草案 + 评审记录（T1/T2/T0 检查点提示，冻结令合规，待拍板 D-U1~D-U4）」——07 草案 v1.0（118 行）。`src/`、`tests/` 零改动。
 - **`0926bea`（2026-10-18 15:23）**「docs: UX-3 草案 v1.1 拍板落档（D-U1~D-U4 全生效 + C-1~C-6 评审修订，门控 PASS 放行动代码）」——07 升 v1.1：A4 钉死首局口径（C-1）、协议表述澄清（C-2）、R1 论证修正（C-3）、A1 补 buildings.js（C-4）、C-5/C-6 注记、§6.3 转拍板记录。1 文件 / +23 −17 行。**`src/`、`tests/` 零改动。**
 - **`cb4d22d`（2026-10-18 16:14）**「feat: UX-3 新手引导补丁实施（T1/T2/T0 检查点提示，冻结令合规）」——config/uiHints.js + core/hints.js + ui/hintBar.js + tests/hints.test.js 新增，telemetry.js（hints 字段）+ main.js（装配）+ style.css + telemetry.test.js 改动。8 文件 / +464 −3 行。133/133 + 33/33 绿。
-- **工作区终态**：仅余有意 untracked——`.playwright-cli/`、`.smoke/`、`.workbuddy/`（本地工具产物）、`scratch/factory-town-replay.mjs`（过程调试件，可删待用户定）；**本轮文档改动（协议 v1.5 + HANDOVER 总账更新）尚未提交**，待用户拍板。**建议后续把前三个写进 `.gitignore`**，待用户定。
+- **`2d94bb1`（2026-10-18 19:40）**「docs: UX-3 R1 证据链判定弧归档（R1 零触发 PASS 报告 + 协议 v1.5：试玩硬前置 + 熟练参照 57~104）」——㉚ 弧产物：R1 判定报告 + 协议 v1.5（§2.1 硬前置 + §5.1 熟练参照）。2 文件 / +242 −2 行。`src/`、`tests/` 零改动。
+- **`0115847`（2026-10-18 19:40）**「docs+data: UX-3 A4 主判据判定 FAIL（2 位新手首局 281/358 tick 双线超基线，病灶分型 + 四条修订建议待拍板 + 交接总账㉛）」——㉛ 弧产物：A4 判定报告 + P4/P5 两局首局数据归档 + HANDOVER 抬头/㉛/§6.4 核销。4 文件 / +2476 −5 行。`src/`、`tests/` 零改动。
+- **工作区终态**：仅余有意 untracked——`.playwright-cli/`、`.smoke/`、`.workbuddy/`（本地工具产物）、`scratch/factory-town-replay.mjs`（过程调试件，可删待用户定）；**R1 弧与 A4 弧全部产物已提交（`2d94bb1` / `0115847`）**。**建议后续把前三个写进 `.gitignore`**，待用户定。
 
 ## 7. 纪律备忘（给下一位接手者）
 
